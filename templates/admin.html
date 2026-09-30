@@ -465,8 +465,17 @@ document.getElementById('signout-btn').addEventListener('click', function(e) {
 
         // Load data initially when the page opens
         window.onload = function() {
-            fetchBookingsData();
-        };
+    const token = localStorage.getItem('access_token');
+    
+    // If there's no token, bounce them away from the admin page immediately!
+    if (!token) {
+        window.location.href = '/login'; // Or wherever your login page is
+        return;
+    }
+    
+    // Otherwise, fetch your admin data normally
+    fetchBookingsData();
+};
     </script>
 
 
@@ -595,11 +604,19 @@ function toggleMobileMenu() {
 
    <script>
     // 1. Check if already logged in during this session
+    
     window.onload = function() {
-        if (sessionStorage.getItem('adminToken')) {
-            showDashboard();
-        }
-    };
+    const token = localStorage.getItem('access_token');
+    
+    // If there is no token, kick them out immediately
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    // Otherwise, load your dashboard data
+    fetchBookingsData();
+};
 
     // 2. Handle Login Form Submission
     async function handleLogin(event) {
