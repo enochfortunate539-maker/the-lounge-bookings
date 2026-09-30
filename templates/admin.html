@@ -225,7 +225,7 @@
         }
 
         function fetchBookingsData() {
-            fetch('http://127.0.0.1:5000/api/bookings')
+            fetch('/api/bookings')
             .then(res => res.json())
             .then(data => {
                 const container = document.getElementById('full-bookings-list');
@@ -301,7 +301,7 @@
         }
 
         function updateStatus(bookingId, newStatus) {
-            fetch(`http://127.0.0.1:5000/api/bookings/${bookingId}/status`, {
+            fetch(`/api/bookings/${bookingId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -349,7 +349,7 @@
         }
 
         function fetchBookingsData() {
-            fetch('http://127.0.0.1:5000/api/bookings')
+            fetch('/api/bookings')
             .then(res => res.json())
             .then(data => {
                 const container = document.getElementById('full-bookings-list');
@@ -422,7 +422,7 @@
 }
 
         function updateStatus(bookingId, newStatus) {
-            fetch(`http://127.0.0.1:5000/api/bookings/${bookingId}/status`, {
+            fetch(`/api/bookings/${bookingId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -479,7 +479,7 @@
         }
 
         function fetchBookingsData() {
-            fetch('http://127.0.0.1:5000/api/bookings')
+            fetch('/api/bookings')
             .then(res => res.json())
             .then(data => {
                 const container = document.getElementById('full-bookings-list');
@@ -536,7 +536,7 @@
     document.getElementById('cancelled-count').textContent = cancelled;
 }
         function updateStatus(bookingId, newStatus) {
-            fetch(`http://127.0.0.1:5000/api/bookings/${bookingId}/status`, {
+            fetch(`/api/bookings/${bookingId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -585,7 +585,7 @@ function toggleMobileMenu() {
         const errorText = document.getElementById('loginError');
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/login', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -630,7 +630,7 @@ function toggleMobileMenu() {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/bookings', {
+            const response = await fetch('/api/bookings', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
