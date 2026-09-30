@@ -338,7 +338,8 @@ document.getElementById('signout-btn').addEventListener('click', function(e) {
             .catch(err => console.error("Error updating status:", err));
         }
 
-        function handleLogout() {
+        async function handleLogout() {
+            
             localStorage.removeItem('access_token');
             window.location.href = '/';
         }
@@ -457,10 +458,10 @@ document.getElementById('signout-btn').addEventListener('click', function(e) {
             .catch(err => console.error("Error updating status:", err));
         }
 
-        function handleLogout() {
-            localStorage.removeItem('access_token');
+        async function handleLogout() {
+           localStorage.removeItem('access_token');
             window.location.href = '/';
-        }
+}
 
         // Load data initially when the page opens
         window.onload = function() {
@@ -573,10 +574,10 @@ document.getElementById('signout-btn').addEventListener('click', function(e) {
             .catch(err => console.error("Error updating status:", err));
         }
 
-        function handleLogout() {
-            localStorage.removeItem('access_token');
-            window.location.href = '/';
-        }
+         async function handleLogout() {
+    localStorage.removeItem('access_token');
+    window.location.href = '/';
+}
     </script>
     
 
@@ -638,10 +639,10 @@ function toggleMobileMenu() {
     }
 
     // 4. Logout Function
-    function logout() {
-        sessionStorage.removeItem('adminToken');
-        location.reload();
-    }
+    async function handleLogout() {
+    localStorage.removeItem('access_token');
+    window.location.href = '/';
+}
 
     // 5. Fetch Bookings Securely with Bearer Token
     async function fetchBookings() {
