@@ -40,7 +40,7 @@ def privacy_page():
 
 
 # Serve the admin dashboard HTML page
-@app.route('/admin.html')
+@app.route('/admin')
 def admin_page():
     return render_template('admin.html')
 
