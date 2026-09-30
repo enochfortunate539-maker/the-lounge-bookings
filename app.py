@@ -36,13 +36,6 @@ def contact_page():
 def privacy_page():
     return render_template('privacy.html')
 
-@app.route('/admin')
-def admin_page():
-    return render_template('admin.html')
-
-
-
-
 
 
 
