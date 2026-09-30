@@ -193,8 +193,18 @@
     <script>
         // Fetch bookings and populate data on load
         window.onload = function() {
-            fetchBookingsData();
-        };
+    // Check if the staff access token exists in storage
+    const token = localStorage.getItem('access_token'); // or sessionStorage
+    
+    if (!token) {
+        // If there's no token, kick them back to your login page/home page immediately
+        window.location.href = '/'; // or your login route
+        return;
+    }
+    
+    // If token exists, load the data safely
+    fetchBookingsData();
+};
 
         function switchView(viewName) {
             document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
