@@ -14,7 +14,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('the-lounge-bookings.html')
 
 
 # Serve the admin dashboard HTML page
