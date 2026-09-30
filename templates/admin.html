@@ -206,6 +206,19 @@
     fetchBookingsData();
 };
 
+
+document.getElementById('signout-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Clear the authentication token
+    localStorage.removeItem('access_token'); // Or whatever key name you used
+    
+    // Redirect back to the homepage or login page
+    window.location.href = '/'; 
+});
+
+
+
         function switchView(viewName) {
             document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
             
