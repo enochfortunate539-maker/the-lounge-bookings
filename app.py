@@ -14,7 +14,36 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/')
 def index():
-    return render_template('the-lounge-bookings.html')
+    return render_template('index.html')
+
+@app.route('/menu')
+def menu_page():
+    return render_template('menu.html')
+
+@app.route('/about')
+def about_page():
+    return render_template('about.html')
+
+@app.route('/gallery')
+def gallery_page():
+    return render_template('gallery.html')
+
+@app.route('/contact')
+def contact_page():
+    return render_template('contact.html')
+
+@app.route('/privacy')
+def privacy_page():
+    return render_template('privacy.html')
+
+@app.route('/admin')
+def admin_page():
+    return render_template('admin.html')
+
+
+
+
+
 
 
 # Serve the admin dashboard HTML page
