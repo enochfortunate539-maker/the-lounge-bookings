@@ -193,17 +193,18 @@
     <script>
     // 1. Fetch bookings and populate data on load
     window.onload = function() {
-        const token = localStorage.getItem('access_token');
-        
-        if (!token) {
-            // If there's no token, kick them back to your login page/home page immediately
-            window.location.href = '/';
-            return;
-        }
-        
-        // If token exists, load the data safely
-        fetchBookingsData();
-    };
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('dashboardContent').classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard and load data
+    showDashboard();
+};
 
     // 2. Unified Logout Handler
     function handleLogout(e) {
@@ -489,15 +490,18 @@
 
     // Load data initially when the page opens
     window.onload = function() {
-        const token = localStorage.getItem('access_token');
-        
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
-        
-        fetchBookingsData();
-    };
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('dashboardContent').classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard and load data
+    showDashboard();
+};
 </script>
 
 
@@ -509,13 +513,14 @@ window.onload = function() {
     const token = localStorage.getItem('access_token');
     
     if (!token) {
-        // If no token exists, bounce them back to the home page immediately
-        window.location.href = '/';
+        // No token? Just show the login modal and hide the dashboard
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('dashboardContent').classList.add('hidden');
         return;
     }
     
-    // If token exists, fetch the dashboard data safely
-    fetchBookingsData();
+    // Token exists? Show the dashboard and load data
+    showDashboard();
 };
 
 function switchView(viewName) {
@@ -642,17 +647,18 @@ function toggleMobileMenu() {
 <script>
     // 1. Check if already logged in on page load
     window.onload = function() {
-        const token = localStorage.getItem('access_token');
-        
-        // If there is no token, kick them out to the home page immediately
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
-        
-        // Otherwise, fetch your dashboard data securely
-        fetchBookings();
-    };
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('dashboardContent').classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard and load data
+    showDashboard();
+};
 
     // 2. Handle Login Form Submission
     async function handleLogin(event) {
