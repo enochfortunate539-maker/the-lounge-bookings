@@ -183,24 +183,40 @@ def create_booking():
 @app.route("/api/bookings", methods=["GET"])
 @require_auth
 def get_bookings():
-
     try:
         response = (
             supabase
-            .table("bookings")
+            .table("reservations") # <-- Ensure table name matches Supabase
             .select("*")
             .order("booking_date", desc=False)
             .execute()
         )
-
         return jsonify(response.data), 200
-
     except Exception:
         app.logger.exception("Could not fetch bookings")
-        return jsonify({
-            "success": False,
-            "error": "Unable to load bookings."
-        }), 500
+        return jsonify({"success": False, "error": "Unable to load bookings."}), 500
+
+
+@app.route("/api/bookings/<booking_id>/status", methods=["PUT"])
+@require_auth
+def update_booking_status(booking_id):
+    data = request.get_json(silent=True) or {}
+    new_status = str(data.get("status", "")).lower().strip()
+    
+    # ... status checks ...
+
+    try:
+        response = (
+            supabase
+            .table("reservations") # <-- Ensure table name matches Supabase
+            .update({"status": new_status})
+            .eq("id", booking_id)
+            .execute()
+        )
+        return jsonify({"success": True, "data": response.data}), 200
+    except Exception:
+        app.logger.exception("Could not update booking status")
+        return jsonify({"success": False, "error": "Unable to update status."}), 500
 
 
 @app.route("/api/bookings/<booking_id>/status", methods=["PUT"])
