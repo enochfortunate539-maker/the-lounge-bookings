@@ -1,697 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Lounge - Admin Dashboard</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Supabase JS Client Library -->
-    <!-- 1. Load Supabase library -->
-<!-- 1. Load Supabase library first -->
-
-
-<script>
-    // 2. Initialize and name it global 'supabase' explicitly
-    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    
-    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
-
-
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
-
 </head>
-<body>
-<!-- Login Modal Overlay -->
-<div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/80 flex items-center justify-center hidden">
-    <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border border-stone-200">
-        <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-stone-900">The Lounge Admin</h2>
-            <p class="text-xs text-stone-500 mt-1">Please sign in to access the dashboard</p>
-        </div>
-        
-        <!-- Make sure this <form> tag with onsubmit is here -->
-        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
-            <div>
-                <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Email Address</label>
-                <input type="email" id="email" required class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Password</label>
-                <input type="password" id="password" required class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900">
-            </div>
-            <button type="submit" class="w-full py-2.5 bg-stone-900 text-white font-semibold text-sm rounded-lg hover:bg-stone-800 transition">
-                Sign In
-            </button>
-        </form>
-    </div>
-</div>
+<body class="bg-stone-50 text-stone-900 font-sans antialiased">
 
-
-
-
-
-
-
-
-    <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
-        <div>
-            <!-- Brand / Logo Area -->
-            <div class="p-6 flex items-center space-x-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
-                <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
-            </div>
-
-            <!-- Navigation Links -->
-            <nav class="p-4 space-y-1">
-                <a href="#" onclick="switchView('overview')" id="nav-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    <span>Overview</span>
-                </a>
-                <a href="#" onclick="switchView('reservations')" id="nav-reservations" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Reservations</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Signed In User Footer -->
-        <div class="p-4 border-t border-stone-200">
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider">Signed in as</p>
-            <p class="text-xs font-semibold text-stone-700 truncate mb-3">thelounge2024@hotmail.com</p>
-            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
-                <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                <span>Sign out</span>
-            </button>
-        </div>
-    </aside>
-
-<!-- Mobile Sidebar Overlay Menu -->
-<div id="mobile-menu" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm hidden md:hidden flex">
-    <div class="w-64 bg-white h-full flex flex-col justify-between shadow-xl">
-        <div>
-            <div class="p-6 flex items-center justify-between border-b border-stone-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
-                    <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-stone-100">
+            <h2 class="text-2xl font-bold text-stone-900 mb-2">Admin Portal</h2>
+            <p class="text-sm text-stone-500 mb-6">Sign in to manage The Lounge reservations and settings.</p>
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Email</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-2.5 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 text-sm">
                 </div>
-                <!-- Close Button -->
-                <button onclick="toggleMobileMenu()" class="text-stone-400 hover:text-stone-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <nav class="p-4 space-y-1">
-                <a href="#" onclick="switchView('overview'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <span>Overview</span>
-                </a>
-                <a href="#" onclick="switchView('reservations'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <span>Reservations</span>
-                </a>
-            </nav>
-        </div>
-        <div class="p-4 border-t border-stone-200">
-            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
-                <span>Sign out</span>
-            </button>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-2.5 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 text-sm">
+                </div>
+                <button type="submit" class="w-full py-3 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition text-sm">Sign In</button>
+            </form>
         </div>
     </div>
-    <!-- Click outside to close -->
-    <div class="flex-1" onclick="toggleMobileMenu()"></div>
-</div>
 
-
-
-
-
-
-
-<!-- Main Content Area -->
-    <main id="dashboardContent"  class="flex-1 flex flex-col overflow-y-auto">
-        <!-- Top Navigation Header -->
-        <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-        <!-- Hamburger Menu Toggle Button -->
-        <button onclick="toggleMobileMenu()" class="md:hidden text-stone-600 hover:text-stone-900 focus:outline-none">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-
-
-            <div>
-                <h1 id="page-title" class="text-xl font-bold text-stone-900">Overview</h1>
-                <p id="page-subtitle" class="text-xs text-stone-500">Welcome back. Here is what's happening at the restaurant today.</p>
+    <!-- Dashboard Layout -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
+            <div class="p-6">
+                <h1 class="text-xl font-bold tracking-tight text-stone-900 mb-8">The Lounge</h1>
+                <nav class="space-y-1">
+                    <a href="#" data-view="overview" id="nav-overview" onclick="switchView('overview')" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg bg-stone-900 text-white transition">Overview</a>
+                    <a href="#" data-view="reservations" id="nav-reservations" onclick="switchView('reservations')" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition">Reservations</a>
+                </nav>
             </div>
-        </header>
+            <div class="p-6 border-t border-stone-200">
+                <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
+            </div>
+        </aside>
 
-        <!-- VIEW 1: OVERVIEW -->
-        <div id="view-overview" class="dashboard-view p-8 space-y-6">
-            <!-- Metric Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Pending Requests</span>
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="pending-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-amber-600 font-medium">Needs review</span>
-                    </div>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <!-- Top Header -->
+            <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-stone-900" id="pageTitle">Dashboard Overview</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-medium text-stone-600" id="adminUserEmail">admin@thelounge.local</span>
                 </div>
+            </header>
 
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Confirmed Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
+            <!-- Overview View -->
+            <div id="overviewView" class="dashboard-view p-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Today's Bookings</p>
+                        <h3 class="text-3xl font-bold text-stone-900 mt-2" id="statTodayBookings">0</h3>
                     </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="confirmed-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Upcoming</span>
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Pending Approvals</p>
+                        <h3 class="text-3xl font-bold text-stone-900 mt-2" id="statPending">0</h3>
                     </div>
-                </div>
-
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Completed Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="completed-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Completed</span>
-                    </div>
-                </div>
-
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Cancelled Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="cancelled-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Cancelled</span>
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Total Reservations</p>
+                        <h3 class="text-3xl font-bold text-stone-900 mt-2" id="statTotal">0</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Requires Action Section -->
-            <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
-                <div class="p-6 border-b border-stone-100 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-base font-bold text-stone-900">Requires Action</h2>
-                        <p class="text-xs text-stone-500">Table booking requests awaiting confirmation</p>
+            <!-- Reservations View -->
+            <div id="reservationsView" class="dashboard-view p-8 space-y-6 hidden">
+                <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-stone-200 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                                    <th class="pb-3 px-4">Customer</th>
+                                    <th class="pb-3 px-4">Date & Time</th>
+                                    <th class="pb-3 px-4">Guests</th>
+                                    <th class="pb-3 px-4">Status</th>
+                                    <th class="pb-3 px-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservationsTableBody" class="divide-y divide-stone-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
                     </div>
-                    <a href="#" onclick="switchView('reservations')" class="text-xs font-semibold text-stone-900 hover:underline flex items-center space-x-1">
-                        <span>View All</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </a>
-                </div>
-                <div id="requires-action-list" class="divide-y divide-stone-100">
-                    <!-- Populated dynamically -->
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <!-- VIEW 2: RESERVATIONS -->
-        <div id="view-reservations" class="dashboard-view p-8 space-y-6 hidden">
-            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
-                <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
-                <div id="full-bookings-list" class="divide-y divide-stone-100">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-        </div>
-    </main>
-
-
-<script>
-/* =========================================================
-   THE LOUNGE ADMIN DASHBOARD
-   Clean single-source frontend logic
-   ========================================================= */
-
-const API_BASE = "";
-
-const state = {
-    token: localStorage.getItem("admin_token") || "",
-    bookings: []
-};
-
-const $ = (id) => document.getElementById(id);
-
-function authHeaders(json = false) {
-    const headers = {};
-    if (json) headers["Content-Type"] = "application/json";
-    if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
-    return headers;
-}
-
-function showLogin() {
-    const modal = $("loginModal");
-    if (modal) modal.classList.remove("hidden");
-}
-
-function hideLogin() {
-    const modal = $("loginModal");
-    if (modal) modal.classList.add("hidden");
-}
-
-function showDashboard() {
-    hideLogin();
-    document.body.classList.remove("dashboard-locked");
-}
-
-function logout() {
-    localStorage.removeItem("admin_token");
-    state.token = "";
-    state.bookings = [];
-    showLogin();
-}
-
-async function apiFetch(url, options = {}) {
-    const response = await fetch(`${API_BASE}${url}`, {
-        ...options,
-        headers: {
-            ...authHeaders(Boolean(options.body)),
-            ...(options.headers || {})
+    <!-- Script Logic -->
+    <script>
+        // Token Management via Local Storage
+        function getToken() {
+            return localStorage.getItem('lounge_admin_token');
         }
-    });
 
-    if (response.status === 401) {
-        logout();
-        throw new Error("Your session has expired. Please log in again.");
-    }
+        function setToken(token) {
+            if (token) {
+                localStorage.setItem('lounge_admin_token', token);
+            } else {
+                localStorage.removeItem('lounge_admin_token');
+            }
+        }
 
-    let payload = null;
-    try {
-        payload = await response.json();
-    } catch (_) {}
+        // Authenticated API Helper pointing to Flask Routes
+        async function apiFetch(url, options = {}) {
+            const token = getToken();
+            headers = options.headers || {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            headers['Content-Type'] = 'application/json';
+            options.headers = headers;
 
-    if (!response.ok) {
-        throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`);
-    }
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                logout();
+                throw new Error('Unauthorized');
+            }
+            return response;
+        }
 
-    return payload;
-}
+        // View Switching Logic
+        function switchView(viewName) {
+            document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
+            const targetView = document.getElementById(viewName + 'View');
+            if (targetView) targetView.classList.remove('hidden');
 
-function normalizeStatus(status) {
-    const value = String(status || "pending").toLowerCase();
+            document.querySelectorAll('aside nav a').forEach(link => {
+                link.classList.remove('bg-stone-900', 'text-white');
+                link.classList.add('text-stone-600', 'hover:bg-stone-100', 'hover:text-stone-900');
+            });
 
-    // Backwards compatibility with the old "rejected" value.
-    if (value === "rejected") return "cancelled";
+            const activeLink = document.querySelector(`[data-view="${viewName}"]`);
+            if (activeLink) {
+                activeLink.classList.remove('text-stone-600', 'hover:bg-stone-100', 'hover:text-stone-900');
+                activeLink.classList.add('bg-stone-900', 'text-white');
+            }
 
-    if (["pending", "confirmed", "completed", "cancelled"].includes(value)) {
-        return value;
-    }
+            document.getElementById('pageTitle').textContent = viewName === 'overview' ? 'Dashboard Overview' : 'Customer Reservations';
 
-    return "pending";
-}
+            if (viewName === 'reservations' || viewName === 'overview') {
+                loadDashboardData();
+            }
+        }
 
-function formatStatus(status) {
-    const normalized = normalizeStatus(status);
-    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
+        // Authentication & Session Handlers
+        function hideLogin() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+        }
 
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
+        function logout() {
+            setToken(null);
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
 
-function formatDate(value) {
-    if (!value) return "—";
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return escapeHtml(value);
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
 
-    return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
-}
+                if (response.ok && data.success) {
+                    setToken(data.access_token);
+                    hideLogin();
+                    document.getElementById('adminUserEmail').textContent = username;
+                    loadDashboardData();
+                } else {
+                    alert('Login failed: ' + (data.error || 'Invalid credentials'));
+                }
+            } catch (err) {
+                alert('Network error during login.');
+                console.error(err);
+            }
+        }
 
-function formatTime(value) {
-    if (!value) return "—";
-    return escapeHtml(value);
-}
+        function checkSession() {
+            const token = getToken();
+            if (token) {
+                hideLogin();
+                loadDashboardData();
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+            }
+        }
 
-function getBookingName(booking) {
-    return booking.full_name || booking.fullName || booking.name || "Unknown customer";
-}
+        // Formatting Helpers
+        function normalizeStatus(status) {
+            return (status || 'pending').toLowerCase();
+        }
 
-function getBookingEmail(booking) {
-    return booking.email || "—";
-}
+        function formatStatus(status) {
+            const norm = normalizeStatus(status);
+            return norm.charAt(0).toUpperCase() + norm.slice(1);
+        }
 
-function getBookingPhone(booking) {
-    return booking.phone || "—";
-}
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
 
-function getBookingGuests(booking) {
-    return booking.guests ?? booking.number_of_guests ?? "—";
-}
+        // Data Fetching via Flask Backend APIs
+        async function loadDashboardData() {
+            try {
+                const response = await apiFetch('/api/bookings');
+                if (!response.ok) throw new Error('Failed to fetch bookings');
+                const bookings = await response.json();
 
-function getBookingDate(booking) {
-    return booking.booking_date || booking.bookingDate || booking.date || "";
-}
+                // Update Stats
+                document.getElementById('statTotal').textContent = bookings.length;
+                const pendingCount = bookings.filter(b => normalizeStatus(b.status) === 'pending').length;
+                document.getElementById('statPending').textContent = pendingCount;
 
-function getBookingTime(booking) {
-    return booking.booking_time || booking.bookingTime || booking.time || "";
-}
+                const todayStr = new Date().toISOString().split('T')[0];
+                const todayCount = bookings.filter(b => b.booking_date === todayStr).length;
+                document.getElementById('statTodayBookings').textContent = todayCount;
 
-function getBookingRequests(booking) {
-    return booking.special_requests || booking.specialRequests || "";
-}
+                // Render Reservations Table if visible
+                const tbody = document.getElementById('reservationsTableBody');
+                if (tbody) {
+                    if (bookings.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="py-4 px-4 text-center text-stone-500 text-sm">No reservations found.</td></tr>';
+                        return;
+                    }
 
-function statusClasses(status) {
-    switch (normalizeStatus(status)) {
-        case "confirmed":
-            return "bg-green-100 text-green-800";
-        case "completed":
-            return "bg-blue-100 text-blue-800";
-        case "cancelled":
-            return "bg-red-100 text-red-800";
-        default:
-            return "bg-yellow-100 text-yellow-800";
-    }
-}
+                    tbody.innerHTML = bookings.map(res => `
+                        <tr class="hover:bg-stone-50/50 transition">
+                            <td class="py-3 px-4">
+                                <div class="font-medium text-stone-900">${escapeHtml(res.full_name || 'Guest')}</div>
+                                <div class="text-xs text-stone-500">${escapeHtml(res.email || '')}</div>
+                            </td>
+                            <td class="py-3 px-4 text-sm text-stone-600">${escapeHtml(res.booking_date || '')} ${escapeHtml(res.booking_time || '')}</td>
+                            <td class="py-3 px-4 text-sm text-stone-600">${escapeHtml(res.guests || 1)}</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-800">
+                                    ${formatStatus(res.status)}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-right space-x-2">
+                                <button onclick="updateStatus('${res.id}', 'confirmed')" class="text-xs font-medium text-emerald-600 hover:text-emerald-800">Confirm</button>
+                                <button onclick="updateStatus('${res.id}', 'cancelled')" class="text-xs font-medium text-red-600 hover:text-red-800">Cancel</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error loading dashboard data:', err);
+                const tbody = document.getElementById('reservationsTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-4 px-4 text-center text-red-500 text-sm">Failed to load reservations.</td></tr>';
+                }
+            }
+        }
 
-function updateCounters() {
-    const counts = {
-        pending: 0,
-        confirmed: 0,
-        completed: 0,
-        cancelled: 0
-    };
+        async function updateStatus(id, newStatus) {
+            try {
+                const response = await apiFetch(`/api/bookings/${id}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    loadDashboardData();
+                } else {
+                    alert('Error updating status: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error updating status request failed.');
+                console.error(err);
+            }
+        }
 
-    state.bookings.forEach(booking => {
-        counts[normalizeStatus(booking.status)]++;
-    });
-
-    const mappings = {
-        pending: ["pendingCount", "pendingBookings", "pending-count"],
-        confirmed: ["confirmedCount", "confirmedBookings", "confirmed-count"],
-        completed: ["completedCount", "completedBookings", "completed-count"],
-        cancelled: ["cancelledCount", "cancelledBookings", "cancelled-count"]
-    };
-
-    Object.entries(mappings).forEach(([status, ids]) => {
-        ids.forEach(id => {
-            const element = $(id);
-            if (element) element.textContent = counts[status];
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
         });
-    });
-}
-
-function renderBookings() {
-    const containers = [
-        $("reservationsTableBody"),
-        $("bookingsTableBody"),
-        $("reservationsList"),
-        $("bookingsList")
-    ].filter(Boolean);
-
-    if (!containers.length) return;
-
-    const rows = state.bookings.length
-        ? state.bookings.map(booking => {
-            const status = normalizeStatus(booking.status);
-            const id = booking.id;
-            const name = getBookingName(booking);
-            const date = getBookingDate(booking);
-            const time = getBookingTime(booking);
-
-            return `
-                <tr class="border-b">
-                    <td class="px-4 py-4">
-                        <div class="font-medium text-gray-900">${escapeHtml(name)}</div>
-                        <div class="text-sm text-gray-500">${escapeHtml(getBookingEmail(booking))}</div>
-                    </td>
-                    <td class="px-4 py-4 text-sm">
-                        <div>${formatDate(date)}</div>
-                        <div class="text-gray-500">${formatTime(time)}</div>
-                    </td>
-                    <td class="px-4 py-4 text-sm">${escapeHtml(getBookingGuests(booking))}</td>
-                    <td class="px-4 py-4">
-                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClasses(status)}">
-                            ${formatStatus(status)}
-                        </span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex flex-wrap gap-2">
-                            ${status !== "confirmed" && status !== "completed" ? `
-                                <button onclick="updateStatus('${escapeHtml(id)}','confirmed')"
-                                    class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700">
-                                    Confirm
-                                </button>` : ""}
-                            ${status !== "completed" ? `
-                                <button onclick="updateStatus('${escapeHtml(id)}','completed')"
-                                    class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
-                                    Complete
-                                </button>` : ""}
-                            ${status !== "cancelled" ? `
-                                <button onclick="updateStatus('${escapeHtml(id)}','cancelled')"
-                                    class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
-                                    Cancel
-                                </button>` : ""}
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join("")
-        : `
-            <tr>
-                <td colspan="5" class="px-4 py-12 text-center text-gray-500">
-                    No reservations found.
-                </td>
-            </tr>
-        `;
-
-    containers.forEach(container => {
-        // Table bodies should receive rows. List containers can also display the rows.
-        container.innerHTML = rows;
-    });
-}
-
-function renderRequiresAction() {
-    const container =
-        $("requiresActionList") ||
-        $("requiresAction") ||
-        $("actionList");
-
-    if (!container) return;
-
-    const pending = state.bookings.filter(
-        booking => normalizeStatus(booking.status) === "pending"
-    );
-
-    if (!pending.length) {
-        container.innerHTML = `
-            <div class="rounded-lg border border-gray-200 p-5 text-sm text-gray-500">
-                No bookings require action.
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = pending.map(booking => `
-        <div class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <p class="font-semibold text-gray-900">${escapeHtml(getBookingName(booking))}</p>
-                <p class="text-sm text-gray-500">
-                    ${formatDate(getBookingDate(booking))} · ${formatTime(getBookingTime(booking))}
-                </p>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="updateStatus('${escapeHtml(booking.id)}','confirmed')"
-                    class="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700">
-                    Confirm
-                </button>
-                <button onclick="updateStatus('${escapeHtml(booking.id)}','cancelled')"
-                    class="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    `).join("");
-}
-
-function renderAll() {
-    updateCounters();
-    renderBookings();
-    renderRequiresAction();
-}
-
-async function fetchBookingsData() {
-    try {
-        const data = await apiFetch("/api/bookings");
-        state.bookings = Array.isArray(data) ? data : (data.bookings || []);
-        renderAll();
-    } catch (error) {
-        console.error(error);
-        alert(error.message);
-    }
-}
-
-async function updateStatus(bookingId, status) {
-    const normalized = normalizeStatus(status);
-
-    if (!bookingId) return;
-
-    try {
-        await apiFetch(`/api/bookings/${encodeURIComponent(bookingId)}/status`, {
-            method: "PUT",
-            body: JSON.stringify({ status: normalized })
-        });
-
-        await fetchBookingsData();
-    } catch (error) {
-        console.error(error);
-        alert(error.message);
-    }
-}
-
-function switchView(view) {
-    const overview = $("overviewView");
-    const reservations = $("reservationsView");
-
-    if (overview) overview.classList.toggle("hidden", view !== "overview");
-    if (reservations) reservations.classList.toggle("hidden", view !== "reservations");
-
-    document.querySelectorAll("[data-view]").forEach(button => {
-        button.classList.toggle("font-semibold", button.dataset.view === view);
-    });
-}
-
-function toggleMobileMenu() {
-    const menu = $("mobileMenu") || $("sidebar");
-    if (menu) menu.classList.toggle("hidden");
-}
-
-async function login(event) {
-    event.preventDefault();
-
-    const email =
-        $("loginEmail")?.value?.trim() ||
-        $("username")?.value?.trim() ||
-        $("email")?.value?.trim();
-
-    const password =
-        $("loginPassword")?.value ||
-        $("password")?.value;
-
-    if (!email || !password) {
-        alert("Please enter your email and password.");
-        return;
-    }
-
-    const button = event.submitter || $("loginButton");
-
-    try {
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Signing in...";
-        }
-
-        const response = await fetch(`${API_BASE}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: email,
-                password
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success || !data.access_token) {
-            throw new Error(data.error || "Invalid login credentials.");
-        }
-
-        state.token = data.access_token;
-        localStorage.setItem("admin_token", state.token);
-
-        showDashboard();
-        await fetchBookingsData();
-
-    } catch (error) {
-        alert(error.message);
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Login";
-        }
-    }
-}
-
-async function checkAuthentication() {
-    if (!state.token) {
-        showLogin();
-        return;
-    }
-
-    try {
-        await fetchBookingsData();
-        showDashboard();
-    } catch (_) {
-        logout();
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    // Connect existing login forms without requiring the original inline handlers.
-    const loginForm =
-        $("loginForm") ||
-        document.querySelector("#loginModal form");
-
-    if (loginForm) loginForm.addEventListener("submit", login);
-
-    document.querySelectorAll("[data-view]").forEach(button => {
-        button.addEventListener("click", () => switchView(button.dataset.view));
-    });
-
-    const logoutButtons = document.querySelectorAll(
-        "#logoutButton, [data-action='logout']"
-    );
-    logoutButtons.forEach(button => {
-        button.addEventListener("click", logout);
-    });
-
-    const mobileButtons = document.querySelectorAll(
-        "#mobileMenuButton, [data-action='toggle-mobile-menu']"
-    );
-    mobileButtons.forEach(button => {
-        button.addEventListener("click", toggleMobileMenu);
-    });
-
-    checkAuthentication();
-});
-
-window.fetchBookingsData = fetchBookingsData;
-window.updateStatus = updateStatus;
-window.switchView = switchView;
-window.toggleMobileMenu = toggleMobileMenu;
-window.login = login;
-window.logout = logout;
-</script>
-
+    </script>
 </body>
 </html>

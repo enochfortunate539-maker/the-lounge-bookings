@@ -8,8 +8,8 @@ from supabase import create_client, Client
 app = Flask(__name__)
 CORS(app)
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_URL = ("https://eryvwusmaswlqsydifwi.supabase.co")
+SUPABASE_SERVICE_ROLE_KEY = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njc4MzIwMywiZXhwIjoyMTAyMzU5MjAzfQ.MRdrBVbGMxr4akscT2z7g81sLH578NK0AW6SArpZhCQ")
 
 if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
     raise RuntimeError(
