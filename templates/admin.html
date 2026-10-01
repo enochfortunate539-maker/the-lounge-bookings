@@ -207,11 +207,17 @@
 };
 
     // 2. Unified Logout Handler
-    function handleLogout(e) {
-        if (e) e.preventDefault();
-        localStorage.removeItem('access_token');
-        window.location.href = '/';
-    }
+    function handleLogout() {
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal
+    document.getElementById('dashboardContent').classList.add('hidden');
+    document.getElementById('loginModal').classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form
+    document.getElementById('loginForm').reset();
+}
 
     // Optional: Auto-attach if signout-btn exists in the DOM
     document.addEventListener('DOMContentLoaded', () => {
@@ -484,9 +490,16 @@
     }
 
     function handleLogout() {
-        localStorage.removeItem('access_token');
-        window.location.href = '/';
-    }
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal
+    document.getElementById('dashboardContent').classList.add('hidden');
+    document.getElementById('loginModal').classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form
+    document.getElementById('loginForm').reset();
+}
 
     // Load data initially when the page opens
     window.onload = function() {
@@ -630,8 +643,15 @@ function updateStatus(bookingId, newStatus) {
 }
 
 function handleLogout() {
+    // 1. Wipe the token from local storage
     localStorage.removeItem('access_token');
-    window.location.href = '/';
+    
+    // 2. Hide the dashboard and show the login modal
+    document.getElementById('dashboardContent').classList.add('hidden');
+    document.getElementById('loginModal').classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form
+    document.getElementById('loginForm').reset();
 }
 
 function toggleMobileMenu() {
@@ -699,9 +719,16 @@ function toggleMobileMenu() {
 
     // 4. Logout Function
     function handleLogout() {
-        localStorage.removeItem('access_token');
-        window.location.href = '/';
-    }
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal
+    document.getElementById('dashboardContent').classList.add('hidden');
+    document.getElementById('loginModal').classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form
+    document.getElementById('loginForm').reset();
+}
 
     // 5. Fetch Bookings Securely with Bearer Token
     async function fetchBookings() {
