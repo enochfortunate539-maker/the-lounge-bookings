@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from supabase import create_client, Client
+import os 
 
 app = Flask(__name__)
 CORS(app)  # Allows your frontend to talk to this backend
@@ -36,13 +37,11 @@ def contact_page():
 def privacy_page():
     return render_template('privacy.html')
 
-
-
-
 # Serve the admin dashboard HTML page
 @app.route('/admin')
 def admin_page():
     return render_template('admin.html')
+
 
 @app.route('/api/book', methods=['GET', 'POST'])
 def create_booking():
@@ -106,21 +105,16 @@ def admin_login():
 @app.route('/api/bookings/<booking_id>/status', methods=['PUT'])
 def update_booking_status(booking_id):
     data = request.get_json()
-    new_status = data.get('status') # e.g., 'confirmed' or 'rejected'
+    new_status = data.get('status') # e.g., 'confirmed', 'rejected', 'completed'
     
-    # Update the status column in your Supabase 'bookings' table
-    response = supabase.table('bookings').update({'status': new_status}).eq('id', booking_id).execute()
-    
-    return jsonify({"message": "Booking status updated successfully", "data": response.data}), 200
+    try:
+        # Update the status column in your Supabase 'bookings' table
+        response = supabase.table('bookings').update({'status': new_status}).eq('id', booking_id).execute()
+        return jsonify({"message": "Booking status updated successfully", "data": response.data}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
-
-    
-import os 
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
-
-
-  
