@@ -4,334 +4,851 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Lounge - Admin Dashboard</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
 </head>
-<body class="bg-stone-50 text-stone-900 font-sans antialiased">
+<body class="bg-stone-50 text-stone-800 flex h-screen overflow-hidden">
 
-    <!-- Login Overlay -->
-    <div id="loginOverlay" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-stone-100">
-            <h2 class="text-2xl font-bold text-stone-900 mb-2">Admin Portal</h2>
-            <p class="text-sm text-stone-500 mb-6">Sign in to manage The Lounge reservations and settings.</p>
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Email</label>
-                    <input type="email" id="loginEmail" required class="w-full px-4 py-2.5 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 text-sm">
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
+        <div>
+            <!-- Brand / Logo Area -->
+            <div class="p-6 flex items-center space-x-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
+                <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1">
+                <a href="#" onclick="switchView('overview')" id="nav-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span>Overview</span>
+                </a>
+                <a href="#" onclick="switchView('reservations')" id="nav-reservations" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Reservations</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Signed In User Footer -->
+        <div class="p-4 border-t border-stone-200">
+            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider">Signed in as</p>
+            <p class="text-xs font-semibold text-stone-700 truncate mb-3">thelounge2024@hotmail.com</p>
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
+                <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Sign out</span>
+            </button>
+        </div>
+    </aside>
+
+<!-- Mobile Sidebar Overlay Menu -->
+<div id="mobile-menu" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm hidden md:hidden flex">
+    <div class="w-64 bg-white h-full flex flex-col justify-between shadow-xl">
+        <div>
+            <div class="p-6 flex items-center justify-between border-b border-stone-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
+                    <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Password</label>
-                    <input type="password" id="loginPassword" required class="w-full px-4 py-2.5 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 text-sm">
-                </div>
-                <button type="submit" class="w-full py-3 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition text-sm">Sign In</button>
-            </form>
+                <!-- Close Button -->
+                <button onclick="toggleMobileMenu()" class="text-stone-400 hover:text-stone-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <nav class="p-4 space-y-1">
+                <a href="#" onclick="switchView('overview'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
+                    <span>Overview</span>
+                </a>
+                <a href="#" onclick="switchView('reservations'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
+                    <span>Reservations</span>
+                </a>
+            </nav>
+        </div>
+        <div class="p-4 border-t border-stone-200">
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
+                <span>Sign out</span>
+            </button>
         </div>
     </div>
-
-    <!-- Top Header with Built-in Mobile Hamburger Button -->
-<header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-        <!-- Mobile Hamburger Button (Shows only on mobile screens) -->
-        <button id="menu-btn" onclick="toggleMobileMenu()" class="md:hidden text-stone-700 hover:text-stone-900 focus:outline-none p-1 rounded-md">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-        </button>
-        <h2 class="text-lg font-bold text-stone-900" id="pageTitle">Dashboard Overview</h2>
-    </div>
-    <div class="flex items-center space-x-4">
-        <span class="text-sm font-medium text-stone-600 hidden sm:inline" id="adminUserEmail">admin@thelounge.local</span>
-    </div>
-</header>
-
-<!-- Mobile Dropdown Drawer (Appears right below header when clicked) -->
-<div id="mobile-menu" class="hidden md:hidden bg-white border-b border-stone-200 px-6 py-4 space-y-3 shadow-sm">
-    <button onclick="switchView('overview'); toggleMobileMenu();" class="block w-full text-left py-2 text-sm font-medium text-stone-700 hover:text-stone-900">Overview</button>
-    <button onclick="switchView('reservations'); toggleMobileMenu();" class="block w-full text-left py-2 text-sm font-medium text-stone-700 hover:text-stone-900">Reservations</button>
-    <button onclick="logout()" class="block w-full text-left py-2 text-sm font-medium text-red-600">Sign Out</button>
+    <!-- Click outside to close -->
+    <div class="flex-1" onclick="toggleMobileMenu()"></div>
 </div>
 
-    <!-- Dashboard Layout -->
-    <div class="flex h-screen overflow-hidden">
-        
-        <!-- Desktop Sidebar (Hidden on mobile) -->
-        <aside class="w-64 bg-white border-r border-stone-200 flex-col justify-between hidden md:flex">
-            <div class="p-6">
-                <h1 class="text-xl font-bold tracking-tight text-stone-900 mb-8">The Lounge</h1>
-                <nav class="space-y-1">
-                    <a href="#" data-view="overview" id="nav-overview" onclick="switchView('overview')" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg bg-stone-900 text-white transition">Overview</a>
-                    <a href="#" data-view="reservations" id="nav-reservations" onclick="switchView('reservations')" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition">Reservations</a>
-                </nav>
-            </div>
-            <div class="p-6 border-t border-stone-200">
-                <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
-            </div>
-        </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-y-auto">
-            <!-- Top Header -->
-            <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-stone-900" id="pageTitle">Dashboard Overview</h2>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm font-medium text-stone-600" id="adminUserEmail">admin@thelounge.local</span>
-                </div>
-            </header>
 
-            <!-- Overview View -->
-            <div id="overviewView" class="dashboard-view p-8 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Today's Bookings</p>
-                        <h3 class="text-3xl font-bold text-stone-900 mt-2" id="statTodayBookings">0</h3>
+
+
+
+
+<!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Top Navigation Header -->
+        <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+        <!-- Hamburger Menu Toggle Button -->
+        <button onclick="toggleMobileMenu()" class="md:hidden text-stone-600 hover:text-stone-900 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+
+
+            <div>
+                <h1 id="page-title" class="text-xl font-bold text-stone-900">Overview</h1>
+                <p id="page-subtitle" class="text-xs text-stone-500">Welcome back. Here is what's happening at the restaurant today.</p>
+            </div>
+        </header>
+
+        <!-- VIEW 1: OVERVIEW -->
+        <div id="view-overview" class="dashboard-view p-8 space-y-6">
+            <!-- Metric Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Pending Requests</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Pending Approvals</p>
-                        <h3 class="text-3xl font-bold text-stone-900 mt-2" id="statPending">0</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Total Reservations</p>
-                        <h3 class="text-3xl font-bold text-stone-900 mt-2" id="statTotal">0</h3>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="pending-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-amber-600 font-medium">Needs review</span>
                     </div>
                 </div>
-            </div>
 
-            <!-- Reservations View -->
-            <div id="reservationsView" class="dashboard-view p-8 space-y-6 hidden">
-                <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
-                    <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
-                    <!-- Wrapped in overflow-x-auto for mobile horizontal scrolling -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse min-w-[600px]">
-                            <thead>
-                                <tr class="border-b border-stone-200 text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                    <th class="pb-3 px-4">Customer</th>
-                                    <th class="pb-3 px-4">Date & Time</th>
-                                    <th class="pb-3 px-4">Guests</th>
-                                    <th class="pb-3 px-4">Status</th>
-                                    <th class="pb-3 px-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="reservationsTableBody" class="divide-y divide-stone-100">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Confirmed Bookings</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="confirmed-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-emerald-600 font-medium">Upcoming</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Completed Bookings</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="completed-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-emerald-600 font-medium">Completed</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Cancelled Bookings</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="cancelled-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-emerald-600 font-medium">Cancelled</span>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-   
-    
+            <!-- Requires Action Section -->
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
+                <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-stone-900">Requires Action</h2>
+                        <p class="text-xs text-stone-500">Table booking requests awaiting confirmation</p>
+                    </div>
+                    <a href="#" onclick="switchView('reservations')" class="text-xs font-semibold text-stone-900 hover:underline flex items-center space-x-1">
+                        <span>View All</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+                <div id="requires-action-list" class="divide-y divide-stone-100">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
 
-    <!-- Script Logic -->
+        <!-- VIEW 2: RESERVATIONS -->
+        <div id="view-reservations" class="dashboard-view p-8 space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+                <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
+                <div id="full-bookings-list" class="divide-y divide-stone-100">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </main>
+
     <script>
-        // Token Management via Local Storage
-        function getToken() {
-            return localStorage.getItem('lounge_admin_token');
-        }
+    // 1. Fetch bookings and populate data on load
+    // 1. Fetch bookings and populate data on load
+window.onload = function() {
+    const token = localStorage.getItem('access_token');
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
 
-        function setToken(token) {
-            if (token) {
-                localStorage.setItem('lounge_admin_token', token);
-            } else {
-                localStorage.removeItem('lounge_admin_token');
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
+};
+
+// 2. Unified Logout Handler
+window.handleLogout = function() {
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
+    
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
+
+    function switchView(viewName) {
+        document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
+        
+        ['overview', 'reservations'].forEach(name => {
+            const nav = document.getElementById(`nav-${name}`);
+            if(nav) {
+                nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
             }
-        }
-
-        // Authenticated API Helper pointing to Flask Routes
-        async function apiFetch(url, options = {}) {
-            const token = getToken();
-            headers = options.headers || {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            headers['Content-Type'] = 'application/json';
-            options.headers = headers;
-
-            const response = await fetch(url, options);
-            if (response.status === 401) {
-                logout();
-                throw new Error('Unauthorized');
-            }
-            return response;
-        }
-
-        // View Switching Logic
-        function switchView(viewName) {
-            document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
-            const targetView = document.getElementById(viewName + 'View');
-            if (targetView) targetView.classList.remove('hidden');
-
-            document.querySelectorAll('aside nav a').forEach(link => {
-                link.classList.remove('bg-stone-900', 'text-white');
-                link.classList.add('text-stone-600', 'hover:bg-stone-100', 'hover:text-stone-900');
-            });
-
-            const activeLink = document.querySelector(`[data-view="${viewName}"]`);
-            if (activeLink) {
-                activeLink.classList.remove('text-stone-600', 'hover:bg-stone-100', 'hover:text-stone-900');
-                activeLink.classList.add('bg-stone-900', 'text-white');
-            }
-
-            document.getElementById('pageTitle').textContent = viewName === 'overview' ? 'Dashboard Overview' : 'Customer Reservations';
-
-            if (viewName === 'reservations' || viewName === 'overview') {
-                loadDashboardData();
-            }
-        }
-
-        // Authentication & Session Handlers
-        function hideLogin() {
-            document.getElementById('loginOverlay').classList.add('hidden');
-        }
-
-        function logout() {
-            setToken(null);
-            document.getElementById('loginOverlay').classList.remove('hidden');
-        }
-
-        async function handleLogin(event) {
-            event.preventDefault();
-            const username = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    setToken(data.access_token);
-                    hideLogin();
-                    document.getElementById('adminUserEmail').textContent = username;
-                    loadDashboardData();
-                } else {
-                    alert('Login failed: ' + (data.error || 'Invalid credentials'));
-                }
-            } catch (err) {
-                alert('Network error during login.');
-                console.error(err);
-            }
-        }
-
-        function checkSession() {
-            const token = getToken();
-            if (token) {
-                hideLogin();
-                loadDashboardData();
-            } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
-            }
-        }
-
-        // Formatting Helpers
-        function normalizeStatus(status) {
-            return (status || 'pending').toLowerCase();
-        }
-
-        function formatStatus(status) {
-            const norm = normalizeStatus(status);
-            return norm.charAt(0).toUpperCase() + norm.slice(1);
-        }
-
-        function escapeHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        // Data Fetching via Flask Backend APIs
-        async function loadDashboardData() {
-            try {
-                const response = await apiFetch('/api/bookings');
-                if (!response.ok) throw new Error('Failed to fetch bookings');
-                const bookings = await response.json();
-
-                // Update Stats
-                document.getElementById('statTotal').textContent = bookings.length;
-                const pendingCount = bookings.filter(b => normalizeStatus(b.status) === 'pending').length;
-                document.getElementById('statPending').textContent = pendingCount;
-
-                const todayStr = new Date().toISOString().split('T')[0];
-                const todayCount = bookings.filter(b => b.booking_date === todayStr).length;
-                document.getElementById('statTodayBookings').textContent = todayCount;
-
-                // Render Reservations Table if visible
-                const tbody = document.getElementById('reservationsTableBody');
-                if (tbody) {
-                    if (bookings.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="py-4 px-4 text-center text-stone-500 text-sm">No reservations found.</td></tr>';
-                        return;
-                    }
-
-                    tbody.innerHTML = bookings.map(res => `
-                        <tr class="hover:bg-stone-50/50 transition">
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-stone-900">${escapeHtml(res.full_name || 'Guest')}</div>
-                                <div class="text-xs text-stone-500">${escapeHtml(res.email || '')}</div>
-                            </td>
-                            <td class="py-3 px-4 text-sm text-stone-600">${escapeHtml(res.booking_date || '')} ${escapeHtml(res.booking_time || '')}</td>
-                            <td class="py-3 px-4 text-sm text-stone-600">${escapeHtml(res.guests || 1)}</td>
-                            <td class="py-3 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-800">
-                                    ${formatStatus(res.status)}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-right space-x-2">
-                                <button onclick="updateStatus('${res.id}', 'confirmed')" class="text-xs font-medium text-emerald-600 hover:text-emerald-800">Confirm</button>
-                                <button onclick="updateStatus('${res.id}', 'cancelled')" class="text-xs font-medium text-red-600 hover:text-red-800">Cancel</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-            } catch (err) {
-                console.error('Error loading dashboard data:', err);
-                const tbody = document.getElementById('reservationsTableBody');
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="py-4 px-4 text-center text-red-500 text-sm">Failed to load reservations.</td></tr>';
-                }
-            }
-        }
-
-        async function updateStatus(id, newStatus) {
-            try {
-                const response = await apiFetch(`/api/bookings/${id}/status`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ status: newStatus })
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    loadDashboardData();
-                } else {
-                    alert('Error updating status: ' + (data.error || 'Unknown error'));
-                }
-            } catch (err) {
-                alert('Error updating status request failed.');
-                console.error(err);
-            }
-        }
-
-        // Initialize on Load
-        document.addEventListener('DOMContentLoaded', () => {
-            checkSession();
         });
-    </script>
 
+        document.getElementById(`view-${viewName}`).classList.remove('hidden');
+        const activeNav = document.getElementById(`nav-${viewName}`);
+        if(activeNav) {
+            activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
+        }
 
- <!-- Mobile Menu Toggle Script -->
-<script>
-    const menuBtn = document.getElementById('menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
+        const titles = {
+            'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
+            'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' }
+        };
+        document.getElementById('page-title').innerText = titles[viewName].title;
+        document.getElementById('page-subtitle').innerText = titles[viewName].sub;
 
-    function toggleMobileMenu() {
-        mobileMenu.classList.toggle('hidden');
+        if(viewName === 'reservations' || viewName === 'overview') {
+            fetchBookingsData();
+        }
     }
 
-    menuBtn.addEventListener('click', toggleMobileMenu);
+    function fetchBookingsData() {
+        const token = localStorage.getItem('access_token');
+
+        fetch('/api/bookings', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('full-bookings-list');
+            const actionContainer = document.getElementById('requires-action-list');
+            
+            if (!container || !actionContainer) return;
+
+            container.innerHTML = '';
+            actionContainer.innerHTML = '';
+            
+            if(!data || data.length === 0) {
+                container.innerHTML = '<p class="text-xs text-stone-500 py-4">No reservations found.</p>';
+                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending action items.</p>';
+                document.getElementById('pending-count').innerText = '0';
+                document.getElementById('confirmed-count').innerText = '0';
+                return;
+            }
+
+            let pendingCount = 0;
+            let confirmedCount = 0;
+
+            data.forEach(booking => {
+                const status = booking.status || 'pending';
+                if(status === 'confirmed') confirmedCount++;
+                if(status === 'pending') {
+                    pendingCount++;
+                    actionContainer.innerHTML += `
+                        <div class="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-sm">
+                                    ${(booking.full_name || 'G').substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</h3>
+                                    <p class="text-xs text-stone-500 mt-1">${booking.booking_date} • ${booking.booking_time} • ${booking.guests} Guests</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 border-b border-stone-100">
+                                <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
+                                <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
+                                <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
+                                <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="py-4 flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
+                            <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
+                            <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
+                        </div>
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 border-b border-stone-100">
+                            <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
+                            <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
+                            <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
+                            <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if(pendingCount === 0) {
+                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending action items.</p>';
+            }
+
+            document.getElementById('pending-count').innerText = pendingCount;
+            document.getElementById('confirmed-count').innerText = confirmedCount;
+        })
+        .catch(err => console.error("Error fetching bookings:", err));
+    }
+
+    function updateStatus(bookingId, newStatus) {
+        const token = localStorage.getItem('access_token');
+
+        fetch(`/api/bookings/${bookingId}/status`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            fetchBookingsData();
+        })
+        .catch(err => console.error("Error updating status:", err));
+    }
 </script>
 
+<script>
+    function switchView(viewName) {
+        document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
+        
+        ['overview', 'reservations', 'menu', 'settings'].forEach(name => {
+            const nav = document.getElementById(`nav-${name}`);
+            if(nav) {
+                nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
+            }
+        });
+
+        const targetView = document.getElementById(`view-${viewName}`);
+        if(targetView) targetView.classList.remove('hidden');
+        
+        const activeNav = document.getElementById(`nav-${viewName}`);
+        if(activeNav) {
+            activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
+        }
+
+        const titles = {
+            'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
+            'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' },
+            'menu': { title: 'Menu', sub: 'Manage your restaurant menu items.' },
+            'settings': { title: 'Settings', sub: 'Manage your account and preferences.' }
+        };
+        
+        if (titles[viewName]) {
+            document.getElementById('page-title').innerText = titles[viewName].title;
+            document.getElementById('page-subtitle').innerText = titles[viewName].sub;
+        }
+
+        fetchBookingsData();
+    }
+
+    function fetchBookingsData() {
+        const token = localStorage.getItem('access_token');
+
+        fetch('/api/bookings', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('full-bookings-list');
+            const actionContainer = document.getElementById('requires-action-list');
+            
+            if (!container) return;
+            
+            container.innerHTML = '';
+            if(actionContainer) actionContainer.innerHTML = '';
+            
+            if(!data || data.length === 0) {
+                container.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No reservations found.</p>';
+                if(actionContainer) actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending requests.</p>';
+                updateCounters(0, 0, 0, 0);
+                return;
+            }
+
+            let pendingCount = 0;
+            let confirmedCount = 0;
+            let completedCount = 0;
+            let cancelledCount = 0;
+
+            data.forEach(booking => {
+                const status = (booking.status ? booking.status : 'pending').toLowerCase();
+                
+                if (status === 'pending') pendingCount++;
+                else if (status === 'confirmed') confirmedCount++;
+                else if (status === 'completed') completedCount++;
+                else if (status === 'cancelled' || status === 'rejected') cancelledCount++;
+
+                const itemHTML = `
+                    <div class="py-4 px-6 flex justify-between items-center border-b border-stone-100">
+                        <div>
+                            <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
+                            <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
+                            <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
+                        </div>
+                        <div class="flex flex-col md:flex-row md:items-center gap-2">
+                            <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full text-center">${booking.status || 'pending'}</span>
+                            <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
+                            <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
+                            <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += itemHTML;
+
+                if (status === 'pending' && actionContainer) {
+                    actionContainer.innerHTML += itemHTML;
+                }
+            });
+
+            if (actionContainer && actionContainer.innerHTML === '') {
+                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending requests awaiting confirmation.</p>';
+            }
+
+            updateCounters(pendingCount, confirmedCount, completedCount, cancelledCount);
+        })
+        .catch(err => console.error("Error fetching bookings:", err));
+    }
+
+    function updateCounters(pending, confirmed, completed, cancelled) {
+        const p = document.getElementById('pending-count');
+        const c = document.getElementById('confirmed-count');
+        const comp = document.getElementById('completed-count');
+        const canc = document.getElementById('cancelled-count');
+
+        if(p) p.textContent = pending;
+        if(c) c.textContent = confirmed;
+        if(comp) comp.textContent = completed;
+        if(canc) canc.textContent = cancelled;
+    }
+
+    function updateStatus(bookingId, newStatus) {
+        const token = localStorage.getItem('access_token');
+
+        fetch(`/api/bookings/${bookingId}/status`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            fetchBookingsData();
+        })
+        .catch(err => console.error("Error updating status:", err));
+    }
+
+    // 1. Fetch bookings and populate data on load
+window.onload = function() {
+    const token = localStorage.getItem('access_token');
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
+};
+
+// 2. Unified Logout Handler
+window.handleLogout = function() {
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
+    
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
+</script>
+
+
+
+  
+<script>
+ // 1. Protect the page on load: Check if token exists
+window.onload = function() {
+    const token = localStorage.getItem('access_token');
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
+};
+
+function switchView(viewName) {
+    document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
+    
+    ['overview', 'reservations', 'menu', 'settings'].forEach(name => {
+        const nav = document.getElementById(`nav-${name}`);
+        if(nav) {
+            nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
+        }
+    });
+
+    document.getElementById(`view-${viewName}`).classList.remove('hidden');
+    const activeNav = document.getElementById(`nav-${viewName}`);
+    if(activeNav) {
+        activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
+    }
+
+    const titles = {
+        'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
+        'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' },
+        'menu': { title: 'Menu & Items', sub: 'Update dishes, prices, and availability.' },
+        'settings': { title: 'Settings', sub: 'Manage your portal configuration.' }
+    };
+    document.getElementById('page-title').innerText = titles[viewName].title;
+    document.getElementById('page-subtitle').innerText = titles[viewName].sub;
+
+    fetchBookingsData();
+}
+
+function fetchBookingsData() {
+    const token = localStorage.getItem('access_token');
+
+    fetch('/api/bookings', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById('full-bookings-list');
+        container.innerHTML = '';
+        
+        if(!data || data.length === 0) {
+            container.innerHTML = '<p class="text-xs text-stone-500 py-4">No reservations found.</p>';
+            updateCounters(0, 0, 0, 0);
+            return;
+        }
+
+        let pendingCount = 0;
+        let confirmedCount = 0;
+        let completedCount = 0;
+        let cancelledCount = 0;
+
+        data.forEach(booking => {
+            const status = (booking.status || 'pending').toLowerCase();
+            if (status === 'pending') pendingCount++;
+            else if (status === 'confirmed') confirmedCount++;
+            else if (status === 'completed') completedCount++;
+            else if (status === 'cancelled' || status === 'rejected') cancelledCount++;
+
+            container.innerHTML += `
+                <div class="py-4 flex justify-between items-center border-b border-stone-100">
+                    <div>
+                        <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
+                        <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
+                        <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 border-b border-stone-100">
+                    <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
+                        <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
+                        <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
+                         <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        updateCounters(pendingCount, confirmedCount, completedCount, cancelledCount);
+    })
+    .catch(err => console.error("Error fetching bookings:", err));
+}
+
+function updateCounters(pending, confirmed, completed, cancelled) {
+    document.getElementById('pending-count').textContent = pending;
+    document.getElementById('confirmed-count').textContent = confirmed;
+    document.getElementById('completed-count').textContent = completed;
+    document.getElementById('cancelled-count').textContent = cancelled;
+}
+
+function updateStatus(bookingId, newStatus) {
+    const token = localStorage.getItem('access_token');
+
+    fetch(`/api/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+        fetchBookingsData();
+    })
+    .catch(err => console.error("Error updating status:", err));
+}
+
+window.handleLogout = function() {
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
+    
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
+
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenu.classList.toggle('hidden');
+}
+
+ </script>
+
+
+
+
+<script>
+    // 1. Check if already logged in on page load
+   window.onload = function() {
+    const token = localStorage.getItem('access_token');
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    if (!token) {
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
+        return;
+    }
+    
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
+};
+
+    // 2. Handle Login Form Submission
+    async function handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorText = document.getElementById('loginError');
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Save token consistently to localStorage as 'access_token'
+                localStorage.setItem('access_token', data.access_token);
+                showDashboard();
+            } else {
+                errorText.classList.remove('hidden');
+                errorText.textContent = data.error || 'Invalid login credentials';
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            errorText.textContent = 'Server error. Is Flask running?';
+            errorText.classList.remove('hidden');
+        }
+    }
+
+    // 3. Show Dashboard UI
+    function showDashboard() {
+        document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('dashboardContent').classList.remove('hidden');
+        fetchBookings();
+    }
+
+    // 4. Logout Function
+    window.handleLogout = function() {
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
+    
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
+
+    // 5. Fetch Bookings Securely with Bearer Token
+    async function fetchBookings() {
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+            handleLogout();
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/bookings', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Unauthorized or failed request');
+            }
+
+            const bookings = await response.json();
+            const tableBody = document.getElementById('bookingsTableBody');
+            tableBody.innerHTML = '';
+
+            if (bookings.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-gray-500">No bookings found yet.</td></tr>`;
+                return;
+            }
+
+            bookings.forEach(booking => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
+                row.innerHTML = `
+                    <td class="py-4 px-6 font-medium text-gray-900">${booking.full_name || 'N/A'}</td>
+                    <td class="py-4 px-6">${booking.email || 'N/A'}</td>
+                    <td class="py-4 px-6">${booking.phone || 'N/A'}</td>
+                    <td class="py-4 px-6">${booking.booking_date || 'N/A'}</td>
+                    <td class="py-4 px-6">${booking.booking_time || 'N/A'}</td>
+                    <td class="py-4 px-6">${booking.guests || 'N/A'}</td>
+                    <td class="py-4 px-6 italic text-gray-500">${booking.special_requests || 'None'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            document.getElementById('bookingsTableBody').innerHTML = `<tr><td colspan="7" class="py-6 text-center text-red-500">Failed to load bookings from server.</td></tr>`;
+        }
+    }
+</script>
+
+
+
+
+    
 </body>
 </html>
