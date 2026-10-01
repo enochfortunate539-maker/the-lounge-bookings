@@ -28,10 +28,32 @@
         </div>
     </div>
 
+    <!-- Mobile Top Navigation Bar (Visible only on small screens) -->
+    <nav class="bg-stone-900 text-white shadow-md md:hidden">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16 items-center">
+                <span class="text-lg font-bold tracking-wide">The Lounge</span>
+                <!-- Mobile Hamburger Button -->
+                <button id="menu-btn" class="text-stone-300 hover:text-white focus:outline-none p-2 rounded-md">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden px-4 pt-2 pb-4 space-y-2 border-t border-stone-800 bg-stone-900">
+            <button onclick="switchView('overview'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-stone-800 text-stone-300 hover:text-white">Overview</button>
+            <button onclick="switchView('reservations'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-stone-800 text-stone-300 hover:text-white">Reservations</button>
+            <button onclick="logout()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-stone-800">Sign Out</button>
+        </div>
+    </nav>
+
     <!-- Dashboard Layout -->
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
+        
+        <!-- Desktop Sidebar (Hidden on mobile) -->
+        <aside class="w-64 bg-white border-r border-stone-200 flex-col justify-between hidden md:flex">
             <div class="p-6">
                 <h1 class="text-xl font-bold tracking-tight text-stone-900 mb-8">The Lounge</h1>
                 <nav class="space-y-1">
@@ -76,8 +98,9 @@
             <div id="reservationsView" class="dashboard-view p-8 space-y-6 hidden">
                 <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
                     <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
+                    <!-- Wrapped in overflow-x-auto for mobile horizontal scrolling -->
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
                             <thead>
                                 <tr class="border-b border-stone-200 text-xs font-semibold uppercase tracking-wider text-stone-500">
                                     <th class="pb-3 px-4">Customer</th>
@@ -97,6 +120,18 @@
         </main>
     </div>
 
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        menuBtn.addEventListener('click', toggleMobileMenu);
+    </script>
+    
     <!-- Script Logic -->
     <script>
         // Token Management via Local Storage
