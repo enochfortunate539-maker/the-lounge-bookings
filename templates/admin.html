@@ -1,889 +1,3044 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>The Lounge - Admin Dashboard</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Supabase JS Client Library -->
-    <!-- 1. Load Supabase library -->
-<!-- 1. Load Supabase library first -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
-<script>
-    // 2. Initialize and name it global 'supabase' explicitly
-    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    
-    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
-
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Prevent background scrolling when mobile menu is open */
+        body.menu-open {
+            overflow: hidden;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Smooth modal */
+        #loginModal {
+            transition: opacity 0.2s ease;
+        }
+
+        /* Toast */
+        #toast {
+            transition:
+                opacity 0.25s ease,
+                transform 0.25s ease;
+        }
     </style>
 </head>
+
 <body class="bg-stone-50 text-stone-800 flex h-screen overflow-hidden">
 
-<!-- Login Modal Overlay -->
-<div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/80 flex items-center justify-center hidden">
-    <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border border-stone-200">
-        <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-stone-900">The Lounge Admin</h2>
-            <p class="text-xs text-stone-500 mt-1">Please sign in to access the dashboard</p>
+    <!-- =========================================================
+         LOGIN MODAL
+    ========================================================== -->
+
+    <div
+        id="loginModal"
+        class="fixed inset-0 z-[100] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+
+        <div
+            class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-stone-200"
+        >
+
+            <!-- Logo -->
+            <div class="flex justify-center mb-5">
+
+                <div
+                    class="w-12 h-12 rounded-xl bg-stone-900 flex items-center justify-center text-white font-bold text-xl"
+                >
+                    L
+                </div>
+
+            </div>
+
+            <!-- Heading -->
+            <div class="text-center mb-7">
+
+                <h2 class="text-2xl font-bold text-stone-900">
+                    The Lounge Admin
+                </h2>
+
+                <p class="text-xs text-stone-500 mt-2">
+                    Please sign in to access the dashboard
+                </p>
+
+            </div>
+
+            <!-- Login Form -->
+            <form
+                id="loginForm"
+                class="space-y-5"
+            >
+
+                <!-- Email -->
+                <div>
+
+                    <label
+                        for="email"
+                        class="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2"
+                    >
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        autocomplete="email"
+                        required
+                        class="w-full px-4 py-3 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
+                        placeholder="admin@example.com"
+                    >
+
+                </div>
+
+                <!-- Password -->
+                <div>
+
+                    <label
+                        for="password"
+                        class="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2"
+                    >
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        autocomplete="current-password"
+                        required
+                        class="w-full px-4 py-3 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
+                        placeholder="••••••••"
+                    >
+
+                </div>
+
+                <!-- Login Error -->
+                <div
+                    id="loginError"
+                    class="hidden bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-xs"
+                ></div>
+
+                <!-- Submit -->
+                <button
+                    type="submit"
+                    id="loginButton"
+                    class="w-full py-3 bg-stone-900 text-white font-semibold text-sm rounded-xl hover:bg-stone-800 transition flex items-center justify-center gap-2"
+                >
+
+                    <span id="loginButtonText">
+                        Sign In
+                    </span>
+
+                    <span
+                        id="loginSpinner"
+                        class="spinner hidden"
+                    ></span>
+
+                </button>
+
+            </form>
+
         </div>
-        
-        <!-- Make sure this <form> tag with onsubmit is here -->
-        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
-            <div>
-                <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Email Address</label>
-                <input type="email" id="email" required class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Password</label>
-                <input type="password" id="password" required class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900">
-            </div>
-            <button type="submit" class="w-full py-2.5 bg-stone-900 text-white font-semibold text-sm rounded-lg hover:bg-stone-800 transition">
-                Sign In
-            </button>
-        </form>
+
     </div>
-</div>
 
 
+    <!-- =========================================================
+         MOBILE MENU
+    ========================================================== -->
 
+    <div
+        id="mobileMenu"
+        class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm hidden md:hidden"
+    >
 
+        <div class="flex h-full">
 
+            <!-- Sidebar -->
+            <div
+                class="w-72 bg-white h-full flex flex-col justify-between shadow-xl"
+            >
 
+                <div>
 
+                    <!-- Mobile Header -->
+                    <div
+                        class="p-5 flex items-center justify-between border-b border-stone-100"
+                    >
 
-    <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
-        <div>
-            <!-- Brand / Logo Area -->
-            <div class="p-6 flex items-center space-x-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
-                <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+                        <div class="flex items-center space-x-3">
+
+                            <div
+                                class="w-9 h-9 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold"
+                            >
+                                L
+                            </div>
+
+                            <span class="font-bold text-lg tracking-tight">
+                                The Lounge
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            id="mobileCloseButton"
+                            class="text-stone-400 hover:text-stone-700"
+                        >
+
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                    <!-- Navigation -->
+                    <nav class="p-4 space-y-1">
+
+                        <button
+                            type="button"
+                            data-view="overview"
+                            class="mobile-nav-button w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-stone-900 text-white font-medium text-sm transition text-left"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2-2v-2z"
+                                />
+                            </svg>
+
+                            <span>
+                                Overview
+                            </span>
+
+                        </button>
+
+                        <button
+                            type="button"
+                            data-view="reservations"
+                            class="mobile-nav-button w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition text-left"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                            </svg>
+
+                            <span>
+                                Reservations
+                            </span>
+
+                        </button>
+
+                    </nav>
+
+                </div>
+
+                <!-- Mobile Logout -->
+                <div class="p-4 border-t border-stone-200">
+
+                    <button
+                        type="button"
+                        id="mobileLogoutButton"
+                        class="w-full flex items-center justify-center py-2.5 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition"
+                    >
+                        Sign out
+                    </button>
+
+                </div>
+
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="p-4 space-y-1">
-                <a href="#" onclick="switchView('overview')" id="nav-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    <span>Overview</span>
-                </a>
-                <a href="#" onclick="switchView('reservations')" id="nav-reservations" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Reservations</span>
-                </a>
-            </nav>
+            <!-- Click outside -->
+            <button
+                type="button"
+                id="mobileMenuBackdrop"
+                class="flex-1 cursor-default"
+                aria-label="Close menu"
+            ></button>
+
         </div>
 
-        <!-- Signed In User Footer -->
-        <div class="p-4 border-t border-stone-200">
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider">Signed in as</p>
-            <p class="text-xs font-semibold text-stone-700 truncate mb-3">thelounge2024@hotmail.com</p>
-            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
-                <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                <span>Sign out</span>
-            </button>
+    </div>
+
+
+    <!-- =========================================================
+         DESKTOP SIDEBAR
+    ========================================================== -->
+
+    <aside
+        id="desktopSidebar"
+        class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex"
+    >
+
+        <div>
+
+            <!-- Brand -->
+            <div
+                class="p-6 flex items-center space-x-3 border-b border-stone-100"
+            >
+
+                <div
+                    class="w-9 h-9 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold"
+                >
+                    L
+                </div>
+
+                <span class="font-bold text-lg tracking-tight">
+                    The Lounge Admin
+                </span>
+
+            </div>
+
+            <!-- Navigation -->
+            <nav class="p-4 space-y-1">
+
+                <button
+                    type="button"
+                    id="nav-overview"
+                    data-view="overview"
+                    class="desktop-nav-button w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition text-left"
+                >
+
+                    <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2-2v-2z"
+                        />
+                    </svg>
+
+                    <span>
+                        Overview
+                    </span>
+
+                </button>
+
+                <button
+                    type="button"
+                    id="nav-reservations"
+                    data-view="reservations"
+                    class="desktop-nav-button w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition text-left"
+                >
+
+                    <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                    </svg>
+
+                    <span>
+                        Reservations
+                    </span>
+
+                </button>
+
+            </nav>
+
         </div>
+
+        <!-- User Footer -->
+        <div class="p-4 border-t border-stone-200">
+
+            <p
+                class="text-xs text-stone-400 font-medium uppercase tracking-wider"
+            >
+                Signed in as
+            </p>
+
+            <p
+                id="signedInEmail"
+                class="text-xs font-semibold text-stone-700 truncate mb-3"
+            >
+                —
+            </p>
+
+            <button
+                type="button"
+                id="logoutButton"
+                class="w-full flex items-center justify-center space-x-2 py-2.5 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition"
+            >
+
+                <svg
+                    class="w-4 h-4 text-stone-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                </svg>
+
+                <span>
+                    Sign out
+                </span>
+
+            </button>
+
+        </div>
+
     </aside>
 
-<!-- Mobile Sidebar Overlay Menu -->
-<div id="mobile-menu" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm hidden md:hidden flex">
-    <div class="w-64 bg-white h-full flex flex-col justify-between shadow-xl">
-        <div>
-            <div class="p-6 flex items-center justify-between border-b border-stone-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
-                    <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
-                </div>
-                <!-- Close Button -->
-                <button onclick="toggleMobileMenu()" class="text-stone-400 hover:text-stone-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+
+    <!-- =========================================================
+         MAIN DASHBOARD
+    ========================================================== -->
+
+    <main
+        id="dashboardContent"
+        class="flex-1 flex flex-col overflow-y-auto hidden"
+    >
+
+        <!-- Top Header -->
+        <header
+            class="bg-white border-b border-stone-200 px-5 md:px-8 py-4 flex justify-between items-center sticky top-0 z-20"
+        >
+
+            <div class="flex items-center space-x-4">
+
+                <!-- Mobile Hamburger -->
+                <button
+                    type="button"
+                    id="mobileMenuButton"
+                    class="md:hidden text-stone-600 hover:text-stone-900 focus:outline-none"
+                >
+
+                    <svg
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"
+                        />
+                    </svg>
+
                 </button>
+
+                <div>
+
+                    <h1
+                        id="pageTitle"
+                        class="text-xl font-bold text-stone-900"
+                    >
+                        Overview
+                    </h1>
+
+                    <p
+                        id="pageSubtitle"
+                        class="text-xs text-stone-500 mt-0.5"
+                    >
+                        Welcome back. Here is what's happening at the restaurant today.
+                    </p>
+
+                </div>
+
             </div>
-            <nav class="p-4 space-y-1">
-                <a href="#" onclick="switchView('overview'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <span>Overview</span>
-                </a>
-                <a href="#" onclick="switchView('reservations'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <span>Reservations</span>
-                </a>
-            </nav>
-        </div>
-        <div class="p-4 border-t border-stone-200">
-            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
-                <span>Sign out</span>
+
+            <!-- Refresh -->
+            <button
+                type="button"
+                id="refreshButton"
+                class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-stone-600 border border-stone-200 rounded-lg hover:bg-stone-50 transition"
+            >
+
+                <svg
+                    id="refreshIcon"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 4v5h5M20 20v-5h-5M5.07 9A7.99 7.99 0 0119 6.93M18.93 15A7.99 7.99 0 015 17.07"
+                    />
+                </svg>
+
+                <span class="hidden sm:inline">
+                    Refresh
+                </span>
+
             </button>
-        </div>
-    </div>
-    <!-- Click outside to close -->
-    <div class="flex-1" onclick="toggleMobileMenu()"></div>
-</div>
 
-
-
-
-
-
-
-<!-- Main Content Area -->
-    <main id="dashboardContent"  class="flex-1 flex flex-col overflow-y-auto">
-        <!-- Top Navigation Header -->
-        <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-        <!-- Hamburger Menu Toggle Button -->
-        <button onclick="toggleMobileMenu()" class="md:hidden text-stone-600 hover:text-stone-900 focus:outline-none">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-
-
-            <div>
-                <h1 id="page-title" class="text-xl font-bold text-stone-900">Overview</h1>
-                <p id="page-subtitle" class="text-xs text-stone-500">Welcome back. Here is what's happening at the restaurant today.</p>
-            </div>
         </header>
 
-        <!-- VIEW 1: OVERVIEW -->
-        <div id="view-overview" class="dashboard-view p-8 space-y-6">
-            <!-- Metric Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+
+        <!-- =====================================================
+             OVERVIEW VIEW
+        ====================================================== -->
+
+        <section
+            id="view-overview"
+            class="dashboard-view p-5 md:p-8 space-y-6"
+        >
+
+            <!-- Metric Cards -->
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+
+                <!-- Pending -->
+                <div
+                    class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm"
+                >
+
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Pending Requests</span>
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+                        <span
+                            class="text-xs font-bold text-stone-400 uppercase tracking-wider"
+                        >
+                            Pending Requests
+                        </span>
+
+                        <div
+                            class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+
                         </div>
+
                     </div>
+
                     <div class="flex items-baseline space-x-2">
-                        <span id="pending-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-amber-600 font-medium">Needs review</span>
+
+                        <span
+                            id="pendingCount"
+                            class="text-3xl font-extrabold text-stone-900"
+                        >
+                            0
+                        </span>
+
+                        <span
+                            class="text-xs text-amber-600 font-medium"
+                        >
+                            Needs review
+                        </span>
+
                     </div>
+
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+
+                <!-- Confirmed -->
+                <div
+                    class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm"
+                >
+
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Confirmed Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+                        <span
+                            class="text-xs font-bold text-stone-400 uppercase tracking-wider"
+                        >
+                            Confirmed Bookings
+                        </span>
+
+                        <div
+                            class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+
                         </div>
+
                     </div>
+
                     <div class="flex items-baseline space-x-2">
-                        <span id="confirmed-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Upcoming</span>
+
+                        <span
+                            id="confirmedCount"
+                            class="text-3xl font-extrabold text-stone-900"
+                        >
+                            0
+                        </span>
+
+                        <span
+                            class="text-xs text-emerald-600 font-medium"
+                        >
+                            Confirmed
+                        </span>
+
                     </div>
+
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+
+                <!-- Completed -->
+                <div
+                    class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm"
+                >
+
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Completed Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+                        <span
+                            class="text-xs font-bold text-stone-400 uppercase tracking-wider"
+                        >
+                            Completed Bookings
+                        </span>
+
+                        <div
+                            class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M5 13l4 4L19 7"
+                                />
+                            </svg>
+
                         </div>
+
                     </div>
+
                     <div class="flex items-baseline space-x-2">
-                        <span id="completed-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Completed</span>
+
+                        <span
+                            id="completedCount"
+                            class="text-3xl font-extrabold text-stone-900"
+                        >
+                            0
+                        </span>
+
+                        <span
+                            class="text-xs text-blue-600 font-medium"
+                        >
+                            Completed
+                        </span>
+
                     </div>
+
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+
+                <!-- Cancelled -->
+                <div
+                    class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm"
+                >
+
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Cancelled Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+                        <span
+                            class="text-xs font-bold text-stone-400 uppercase tracking-wider"
+                        >
+                            Cancelled Bookings
+                        </span>
+
+                        <div
+                            class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center text-red-600"
+                        >
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+
                         </div>
+
                     </div>
+
                     <div class="flex items-baseline space-x-2">
-                        <span id="cancelled-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Cancelled</span>
+
+                        <span
+                            id="cancelledCount"
+                            class="text-3xl font-extrabold text-stone-900"
+                        >
+                            0
+                        </span>
+
+                        <span
+                            class="text-xs text-red-600 font-medium"
+                        >
+                            Cancelled
+                        </span>
+
                     </div>
+
                 </div>
+
             </div>
 
-            <!-- Requires Action Section -->
-            <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
-                <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+
+            <!-- Requires Action -->
+            <div
+                class="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden"
+            >
+
+                <div
+                    class="p-5 md:p-6 border-b border-stone-100 flex justify-between items-center"
+                >
+
                     <div>
-                        <h2 class="text-base font-bold text-stone-900">Requires Action</h2>
-                        <p class="text-xs text-stone-500">Table booking requests awaiting confirmation</p>
-                    </div>
-                    <a href="#" onclick="switchView('reservations')" class="text-xs font-semibold text-stone-900 hover:underline flex items-center space-x-1">
-                        <span>View All</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </a>
-                </div>
-                <div id="requires-action-list" class="divide-y divide-stone-100">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-        </div>
 
-        <!-- VIEW 2: RESERVATIONS -->
-        <div id="view-reservations" class="dashboard-view p-8 space-y-6 hidden">
-            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
-                <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
-                <div id="full-bookings-list" class="divide-y divide-stone-100">
-                    <!-- Populated dynamically -->
+                        <h2 class="text-base font-bold text-stone-900">
+                            Requires Action
+                        </h2>
+
+                        <p class="text-xs text-stone-500 mt-1">
+                            Table booking requests awaiting confirmation
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        data-view="reservations"
+                        class="view-reservations-button text-xs font-semibold text-stone-900 hover:underline flex items-center gap-1"
+                    >
+
+                        <span>
+                            View All
+                        </span>
+
+                        <svg
+                            class="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                            />
+                        </svg>
+
+                    </button>
+
                 </div>
+
+                <div
+                    id="requiresActionList"
+                    class="divide-y divide-stone-100"
+                >
+
+                    <div class="p-6 text-sm text-stone-500">
+                        Loading...
+                    </div>
+
+                </div>
+
             </div>
-        </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             RESERVATIONS VIEW
+        ====================================================== -->
+
+        <section
+            id="view-reservations"
+            class="dashboard-view hidden p-5 md:p-8"
+        >
+
+            <div
+                class="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden"
+            >
+
+                <div
+                    class="p-5 md:p-6 border-b border-stone-100"
+                >
+
+                    <h2 class="text-base font-bold text-stone-900">
+                        All Customer Reservations
+                    </h2>
+
+                    <p class="text-xs text-stone-500 mt-1">
+                        View and manage all customer table bookings.
+                    </p>
+
+                </div>
+
+                <div id="fullBookingsList">
+
+                    <div class="p-6 text-sm text-stone-500">
+                        Loading...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
     </main>
 
+
+    <!-- =========================================================
+         TOAST
+    ========================================================== -->
+
+    <div
+        id="toast"
+        class="fixed bottom-5 right-5 z-[200] opacity-0 translate-y-3 pointer-events-none"
+    >
+
+        <div
+            id="toastContent"
+            class="bg-stone-900 text-white px-5 py-3 rounded-xl shadow-xl text-sm font-medium"
+        >
+            Done
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+    ========================================================== -->
+
     <script>
-    
-    // 1. Fetch bookings and populate data on load
-window.onload = function() {
-    const token = localStorage.getItem('access_token');
-    const loginModal = document.getElementById('loginModal');
-    const dashboardContent = document.getElementById('dashboardContent');
 
-    if (!token) {
-        // No token? Hide dashboard and force login modal visible
-        if (loginModal) {
-            loginModal.classList.remove('hidden');
-            loginModal.classList.add('flex'); // Ensure flex/block display if needed
-        }
-        if (dashboardContent) dashboardContent.classList.add('hidden');
-        return;
-    }
-    
-    // Token exists? Hide login modal and show dashboard
-    if (loginModal) loginModal.classList.add('hidden');
-    if (dashboardContent) dashboardContent.classList.remove('hidden');
-    
-    if (typeof fetchBookingsData === 'function') {
-        fetchBookingsData();
-    }
-};
-window.handleLogout = function() {
-    // 1. Wipe the token from local storage
-    localStorage.removeItem('access_token');
-    
-    // 2. Reload the page to cleanly reset state and trigger window.onload
-    window.location.reload();
-};
+        /*
+        ============================================================
+        SUPABASE CONFIGURATION
+        ============================================================
+        */
+
+        const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
 
-    function switchView(viewName) {
-        document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
-        
-        ['overview', 'reservations'].forEach(name => {
-            const nav = document.getElementById(`nav-${name}`);
-            if(nav) {
-                nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
+        /*
+        IMPORTANT:
+
+        Do NOT do this:
+
+        window.supabase = window.supabase.createClient(...)
+
+        That overwrites the Supabase library object.
+
+        Instead we create a separate client:
+        */
+
+        const supabaseClient = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+
+        /*
+        ============================================================
+        GLOBAL STATE
+        ============================================================
+        */
+
+        let currentSession = null;
+
+        let allBookings = [];
+
+        let currentView = 'overview';
+
+
+        /*
+        ============================================================
+        DOM HELPERS
+        ============================================================
+        */
+
+        const $ = (id) => document.getElementById(id);
+
+
+        /*
+        ============================================================
+        ESCAPE HTML
+        ============================================================
+
+        This prevents customer data from being inserted directly
+        into HTML without escaping.
+        */
+
+        function escapeHTML(value) {
+
+            if (value === null || value === undefined) {
+                return '';
             }
-        });
 
-        document.getElementById(`view-${viewName}`).classList.remove('hidden');
-        const activeNav = document.getElementById(`nav-${viewName}`);
-        if(activeNav) {
-            activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        const titles = {
-            'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
-            'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' }
-        };
-        document.getElementById('page-title').innerText = titles[viewName].title;
-        document.getElementById('page-subtitle').innerText = titles[viewName].sub;
 
-        if(viewName === 'reservations' || viewName === 'overview') {
-            fetchBookingsData();
-        }
-    }
+        /*
+        ============================================================
+        SHOW TOAST
+        ============================================================
+        */
 
-    function fetchBookingsData() {
-        const token = localStorage.getItem('access_token');
+        let toastTimer = null;
 
-        fetch('/api/bookings', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const container = document.getElementById('full-bookings-list');
-            const actionContainer = document.getElementById('requires-action-list');
-            
-            if (!container || !actionContainer) return;
+        function showToast(message) {
 
-            container.innerHTML = '';
-            actionContainer.innerHTML = '';
-            
-            if(!data || data.length === 0) {
-                container.innerHTML = '<p class="text-xs text-stone-500 py-4">No reservations found.</p>';
-                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending action items.</p>';
-                document.getElementById('pending-count').innerText = '0';
-                document.getElementById('confirmed-count').innerText = '0';
+            const toast = $('toast');
+
+            const content = $('toastContent');
+
+            if (!toast || !content) {
                 return;
             }
 
-            let pendingCount = 0;
-            let confirmedCount = 0;
+            content.textContent = message;
 
-            data.forEach(booking => {
-                const status = booking.status || 'pending';
-                if(status === 'confirmed') confirmedCount++;
-                if(status === 'pending') {
-                    pendingCount++;
-                    actionContainer.innerHTML += `
-                        <div class="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-sm">
-                                    ${(booking.full_name || 'G').substring(0, 2).toUpperCase()}
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</h3>
-                                    <p class="text-xs text-stone-500 mt-1">${booking.booking_date} • ${booking.booking_time} • ${booking.guests} Guests</p>
-                                </div>
-                            </div>
-                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 border-b border-stone-100">
-                                <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
-                                <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
-                                <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
-                                <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
-                            </div>
+            toast.classList.remove(
+                'opacity-0',
+                'translate-y-3'
+            );
+
+            toast.classList.add(
+                'opacity-100',
+                'translate-y-0'
+            );
+
+            clearTimeout(toastTimer);
+
+            toastTimer = setTimeout(() => {
+
+                toast.classList.remove(
+                    'opacity-100',
+                    'translate-y-0'
+                );
+
+                toast.classList.add(
+                    'opacity-0',
+                    'translate-y-3'
+                );
+
+            }, 3000);
+        }
+
+
+        /*
+        ============================================================
+        LOGIN ERROR
+        ============================================================
+        */
+
+        function showLoginError(message) {
+
+            const errorBox = $('loginError');
+
+            if (!errorBox) {
+                return;
+            }
+
+            errorBox.textContent = message;
+
+            errorBox.classList.remove('hidden');
+        }
+
+
+        function clearLoginError() {
+
+            const errorBox = $('loginError');
+
+            if (!errorBox) {
+                return;
+            }
+
+            errorBox.textContent = '';
+
+            errorBox.classList.add('hidden');
+        }
+
+
+        /*
+        ============================================================
+        SHOW / HIDE LOGIN
+        ============================================================
+        */
+
+        function showLoginScreen() {
+
+            const modal = $('loginModal');
+
+            const dashboard = $('dashboardContent');
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            if (dashboard) {
+                dashboard.classList.add('hidden');
+            }
+        }
+
+
+        function showDashboard() {
+
+            const modal = $('loginModal');
+
+            const dashboard = $('dashboardContent');
+
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            if (dashboard) {
+                dashboard.classList.remove('hidden');
+            }
+        }
+
+
+        /*
+        ============================================================
+        GET CURRENT SESSION
+        ============================================================
+        */
+
+        async function getCurrentSession() {
+
+            const {
+                data,
+                error
+            } = await supabaseClient.auth.getSession();
+
+            if (error) {
+
+                console.error(
+                    'Error getting Supabase session:',
+                    error
+                );
+
+                return null;
+            }
+
+            return data.session;
+        }
+
+
+        /*
+        ============================================================
+        LOGIN
+        ============================================================
+        */
+
+        async function handleLogin(event) {
+
+            event.preventDefault();
+
+            clearLoginError();
+
+            const emailInput = $('email');
+
+            const passwordInput = $('password');
+
+            const loginButton = $('loginButton');
+
+            const loginButtonText = $('loginButtonText');
+
+            const loginSpinner = $('loginSpinner');
+
+
+            const email = emailInput.value.trim();
+
+            const password = passwordInput.value;
+
+
+            if (!email || !password) {
+
+                showLoginError(
+                    'Please enter your email and password.'
+                );
+
+                return;
+            }
+
+
+            /*
+            Disable button while logging in
+            */
+
+            loginButton.disabled = true;
+
+            loginButton.classList.add(
+                'opacity-70',
+                'cursor-not-allowed'
+            );
+
+            loginButtonText.textContent = 'Signing in...';
+
+            loginSpinner.classList.remove('hidden');
+
+
+            try {
+
+                const {
+                    data,
+                    error
+                } = await supabaseClient.auth.signInWithPassword({
+
+                    email: email,
+
+                    password: password
+
+                });
+
+
+                if (error) {
+
+                    console.error(
+                        'Supabase login error:',
+                        error
+                    );
+
+                    showLoginError(
+                        error.message || 'Login failed.'
+                    );
+
+                    return;
+                }
+
+
+                if (!data || !data.session) {
+
+                    showLoginError(
+                        'Login succeeded but no session was returned.'
+                    );
+
+                    return;
+                }
+
+
+                /*
+                Store token because your API uses:
+
+                Authorization: Bearer <token>
+                */
+
+                localStorage.setItem(
+                    'access_token',
+                    data.session.access_token
+                );
+
+
+                currentSession = data.session;
+
+
+                /*
+                Show dashboard
+                */
+
+                showDashboard();
+
+
+                /*
+                Show logged-in email
+                */
+
+                updateSignedInUser(data.session);
+
+
+                /*
+                Clear form
+                */
+
+                passwordInput.value = '';
+
+
+                /*
+                Load bookings
+                */
+
+                await fetchBookingsData();
+
+
+                showToast('Signed in successfully.');
+
+
+            } catch (error) {
+
+                console.error(
+                    'Unexpected login error:',
+                    error
+                );
+
+                showLoginError(
+                    'An unexpected error occurred during sign in.'
+                );
+
+            } finally {
+
+                loginButton.disabled = false;
+
+                loginButton.classList.remove(
+                    'opacity-70',
+                    'cursor-not-allowed'
+                );
+
+                loginButtonText.textContent = 'Sign In';
+
+                loginSpinner.classList.add('hidden');
+            }
+        }
+
+
+        /*
+        ============================================================
+        LOGOUT
+        ============================================================
+        */
+
+        async function handleLogout() {
+
+            try {
+
+                await supabaseClient.auth.signOut();
+
+            } catch (error) {
+
+                console.error(
+                    'Supabase logout error:',
+                    error
+                );
+
+            } finally {
+
+                /*
+                Remove local token
+                */
+
+                localStorage.removeItem(
+                    'access_token'
+                );
+
+                currentSession = null;
+
+                allBookings = [];
+
+                closeMobileMenu();
+
+                showLoginScreen();
+
+                showToast('Signed out.');
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        USER DETAILS
+        ============================================================
+        */
+
+        function updateSignedInUser(session) {
+
+            const emailElement = $('signedInEmail');
+
+            if (!emailElement) {
+                return;
+            }
+
+            emailElement.textContent =
+                session?.user?.email || 'Admin';
+        }
+
+
+        /*
+        ============================================================
+        AUTHENTICATION INITIALIZATION
+        ============================================================
+        */
+
+        async function initializeAuthentication() {
+
+            try {
+
+                const session = await getCurrentSession();
+
+
+                if (!session) {
+
+                    showLoginScreen();
+
+                    return;
+                }
+
+
+                currentSession = session;
+
+
+                /*
+                Keep our API token updated.
+                */
+
+                if (session.access_token) {
+
+                    localStorage.setItem(
+                        'access_token',
+                        session.access_token
+                    );
+
+                }
+
+
+                updateSignedInUser(session);
+
+                showDashboard();
+
+
+                /*
+                Load bookings
+                */
+
+                await fetchBookingsData();
+
+
+            } catch (error) {
+
+                console.error(
+                    'Authentication initialization error:',
+                    error
+                );
+
+                showLoginScreen();
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        SUPABASE AUTH STATE LISTENER
+        ============================================================
+        */
+
+        supabaseClient.auth.onAuthStateChange(
+            (event, session) => {
+
+                console.log(
+                    'Supabase auth event:',
+                    event
+                );
+
+
+                if (session) {
+
+                    currentSession = session;
+
+
+                    if (session.access_token) {
+
+                        localStorage.setItem(
+                            'access_token',
+                            session.access_token
+                        );
+
+                    }
+
+
+                    updateSignedInUser(session);
+
+                } else {
+
+                    currentSession = null;
+
+                    localStorage.removeItem(
+                        'access_token'
+                    );
+
+                }
+
+            }
+        );
+
+
+        /*
+        ============================================================
+        GET API TOKEN
+        ============================================================
+        */
+
+        async function getAccessToken() {
+
+            /*
+            Ask Supabase for the current session.
+
+            This is safer than relying entirely on an old
+            localStorage token.
+            */
+
+            const session = await getCurrentSession();
+
+
+            if (!session) {
+
+                localStorage.removeItem(
+                    'access_token'
+                );
+
+                return null;
+            }
+
+
+            currentSession = session;
+
+
+            if (session.access_token) {
+
+                localStorage.setItem(
+                    'access_token',
+                    session.access_token
+                );
+
+            }
+
+
+            return session.access_token;
+        }
+
+
+        /*
+        ============================================================
+        FETCH BOOKINGS
+        ============================================================
+        */
+
+        async function fetchBookingsData() {
+
+            const token = await getAccessToken();
+
+
+            if (!token) {
+
+                showLoginScreen();
+
+                return;
+            }
+
+
+            const refreshButton = $('refreshButton');
+
+            const refreshIcon = $('refreshIcon');
+
+
+            if (refreshButton) {
+
+                refreshButton.disabled = true;
+
+                refreshButton.classList.add(
+                    'opacity-60',
+                    'cursor-not-allowed'
+                );
+
+            }
+
+
+            if (refreshIcon) {
+
+                refreshIcon.classList.add(
+                    'animate-spin'
+                );
+
+            }
+
+
+            try {
+
+                const response = await fetch(
+                    '/api/bookings',
+                    {
+                        method: 'GET',
+
+                        headers: {
+                            'Authorization':
+                                `Bearer ${token}`,
+
+                            'Content-Type':
+                                'application/json'
+                        }
+                    }
+                );
+
+
+                /*
+                If API says unauthorized, the token/session
+                may have expired.
+                */
+
+                if (response.status === 401) {
+
+                    localStorage.removeItem(
+                        'access_token'
+                    );
+
+                    await supabaseClient.auth.signOut();
+
+                    showLoginScreen();
+
+                    showLoginError(
+                        'Your session has expired. Please sign in again.'
+                    );
+
+                    return;
+                }
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Server returned ${response.status}`
+                    );
+
+                }
+
+
+                const data = await response.json();
+
+
+                if (!Array.isArray(data)) {
+
+                    throw new Error(
+                        'The bookings API did not return an array.'
+                    );
+
+                }
+
+
+                allBookings = data;
+
+
+                renderBookings(data);
+
+
+            } catch (error) {
+
+                console.error(
+                    'Error fetching bookings:',
+                    error
+                );
+
+
+                renderBookingsError(
+                    'Failed to load reservations from the server.'
+                );
+
+
+                showToast(
+                    'Could not load reservations.'
+                );
+
+
+            } finally {
+
+                if (refreshButton) {
+
+                    refreshButton.disabled = false;
+
+                    refreshButton.classList.remove(
+                        'opacity-60',
+                        'cursor-not-allowed'
+                    );
+
+                }
+
+
+                if (refreshIcon) {
+
+                    refreshIcon.classList.remove(
+                        'animate-spin'
+                    );
+
+                }
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        RENDER BOOKINGS
+        ============================================================
+        */
+
+        function renderBookings(bookings) {
+
+            const fullContainer =
+                $('fullBookingsList');
+
+            const actionContainer =
+                $('requiresActionList');
+
+
+            if (!fullContainer) {
+                return;
+            }
+
+
+            /*
+            Clear existing
+            */
+
+            fullContainer.innerHTML = '';
+
+
+            if (actionContainer) {
+
+                actionContainer.innerHTML = '';
+
+            }
+
+
+            /*
+            Empty state
+            */
+
+            if (!bookings || bookings.length === 0) {
+
+                fullContainer.innerHTML = `
+                    <div class="p-8 text-center">
+                        <div class="mx-auto w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-3">
+                            <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+
+                        <p class="text-sm font-semibold text-stone-700">
+                            No reservations found
+                        </p>
+
+                        <p class="text-xs text-stone-400 mt-1">
+                            Customer bookings will appear here.
+                        </p>
+                    </div>
+                `;
+
+
+                if (actionContainer) {
+
+                    actionContainer.innerHTML = `
+                        <div class="p-6 text-center">
+                            <p class="text-sm text-stone-500">
+                                No pending requests.
+                            </p>
                         </div>
                     `;
+
                 }
 
-                container.innerHTML += `
-                    <div class="py-4 flex justify-between items-center">
-                        <div>
-                            <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
-                            <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
-                            <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
-                        </div>
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 border-b border-stone-100">
-                            <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
-                            <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
-                            <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
-                            <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
-                        </div>
-                    </div>
-                `;
-            });
 
-            if(pendingCount === 0) {
-                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending action items.</p>';
-            }
+                updateCounters(
+                    0,
+                    0,
+                    0,
+                    0
+                );
 
-            document.getElementById('pending-count').innerText = pendingCount;
-            document.getElementById('confirmed-count').innerText = confirmedCount;
-        })
-        .catch(err => console.error("Error fetching bookings:", err));
-    }
-
-    function updateStatus(bookingId, newStatus) {
-        const token = localStorage.getItem('access_token');
-
-        fetch(`/api/bookings/${bookingId}/status`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ status: newStatus })
-        })
-        .then(res => res.json())
-        .then(data => {
-            fetchBookingsData();
-        })
-        .catch(err => console.error("Error updating status:", err));
-    }
-</script>
-
-<script>
-    function switchView(viewName) {
-        document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
-        
-        ['overview', 'reservations', 'menu', 'settings'].forEach(name => {
-            const nav = document.getElementById(`nav-${name}`);
-            if(nav) {
-                nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
-            }
-        });
-
-        const targetView = document.getElementById(`view-${viewName}`);
-        if(targetView) targetView.classList.remove('hidden');
-        
-        const activeNav = document.getElementById(`nav-${viewName}`);
-        if(activeNav) {
-            activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
-        }
-
-        const titles = {
-            'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
-            'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' },
-            'menu': { title: 'Menu', sub: 'Manage your restaurant menu items.' },
-            'settings': { title: 'Settings', sub: 'Manage your account and preferences.' }
-        };
-        
-        if (titles[viewName]) {
-            document.getElementById('page-title').innerText = titles[viewName].title;
-            document.getElementById('page-subtitle').innerText = titles[viewName].sub;
-        }
-
-        fetchBookingsData();
-    }
-
-    function fetchBookingsData() {
-        const token = localStorage.getItem('access_token');
-
-        fetch('/api/bookings', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const container = document.getElementById('full-bookings-list');
-            const actionContainer = document.getElementById('requires-action-list');
-            
-            if (!container) return;
-            
-            container.innerHTML = '';
-            if(actionContainer) actionContainer.innerHTML = '';
-            
-            if(!data || data.length === 0) {
-                container.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No reservations found.</p>';
-                if(actionContainer) actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending requests.</p>';
-                updateCounters(0, 0, 0, 0);
                 return;
             }
+
+
+            /*
+            Counters
+            */
 
             let pendingCount = 0;
+
             let confirmedCount = 0;
+
             let completedCount = 0;
+
             let cancelledCount = 0;
 
-            data.forEach(booking => {
-                const status = (booking.status ? booking.status : 'pending').toLowerCase();
-                
-                if (status === 'pending') pendingCount++;
-                else if (status === 'confirmed') confirmedCount++;
-                else if (status === 'completed') completedCount++;
-                else if (status === 'cancelled' || status === 'rejected') cancelledCount++;
 
-                const itemHTML = `
-                    <div class="py-4 px-6 flex justify-between items-center border-b border-stone-100">
-                        <div>
-                            <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
-                            <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
-                            <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
+            /*
+            Render each booking
+            */
+
+            bookings.forEach((booking) => {
+
+                const status =
+                    String(
+                        booking.status || 'pending'
+                    ).toLowerCase();
+
+
+                /*
+                Count statuses
+                */
+
+                if (status === 'pending') {
+
+                    pendingCount++;
+
+                } else if (status === 'confirmed') {
+
+                    confirmedCount++;
+
+                } else if (status === 'completed') {
+
+                    completedCount++;
+
+                } else if (
+                    status === 'cancelled' ||
+                    status === 'rejected'
+                ) {
+
+                    cancelledCount++;
+
+                }
+
+
+                /*
+                Full reservations list
+                */
+
+                fullContainer.insertAdjacentHTML(
+                    'beforeend',
+                    createBookingHTML(
+                        booking,
+                        false
+                    )
+                );
+
+
+                /*
+                Pending action list
+                */
+
+                if (
+                    status === 'pending' &&
+                    actionContainer
+                ) {
+
+                    actionContainer.insertAdjacentHTML(
+                        'beforeend',
+                        createBookingHTML(
+                            booking,
+                            true
+                        )
+                    );
+
+                }
+
+            });
+
+
+            /*
+            No pending requests
+            */
+
+            if (
+                actionContainer &&
+                pendingCount === 0
+            ) {
+
+                actionContainer.innerHTML = `
+                    <div class="p-6 text-center">
+                        <div class="mx-auto w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center mb-2">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
                         </div>
-                        <div class="flex flex-col md:flex-row md:items-center gap-2">
-                            <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full text-center">${booking.status || 'pending'}</span>
-                            <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
-                            <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
-                            <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
-                        </div>
+
+                        <p class="text-sm font-semibold text-stone-700">
+                            No pending requests
+                        </p>
+
+                        <p class="text-xs text-stone-400 mt-1">
+                            Everything is up to date.
+                        </p>
                     </div>
                 `;
-                container.innerHTML += itemHTML;
 
-                if (status === 'pending' && actionContainer) {
-                    actionContainer.innerHTML += itemHTML;
-                }
-            });
-
-            if (actionContainer && actionContainer.innerHTML === '') {
-                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending requests awaiting confirmation.</p>';
             }
 
-            updateCounters(pendingCount, confirmedCount, completedCount, cancelledCount);
-        })
-        .catch(err => console.error("Error fetching bookings:", err));
-    }
 
-    function updateCounters(pending, confirmed, completed, cancelled) {
-        const p = document.getElementById('pending-count');
-        const c = document.getElementById('confirmed-count');
-        const comp = document.getElementById('completed-count');
-        const canc = document.getElementById('cancelled-count');
+            /*
+            Update dashboard numbers
+            */
 
-        if(p) p.textContent = pending;
-        if(c) c.textContent = confirmed;
-        if(comp) comp.textContent = completed;
-        if(canc) canc.textContent = cancelled;
-    }
-
-    function updateStatus(bookingId, newStatus) {
-        const token = localStorage.getItem('access_token');
-
-        fetch(`/api/bookings/${bookingId}/status`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ status: newStatus })
-        })
-        .then(res => res.json())
-        .then(data => {
-            fetchBookingsData();
-        })
-        .catch(err => console.error("Error updating status:", err));
-    }
-
-    // 1. Fetch bookings and populate data on load
-window.onload = function() {
-    const token = localStorage.getItem('access_token');
-    const loginModal = document.getElementById('loginModal');
-    const dashboardContent = document.getElementById('dashboardContent');
-
-    if (!token) {
-        // No token? Hide dashboard and force login modal visible
-        if (loginModal) {
-            loginModal.classList.remove('hidden');
-            loginModal.classList.add('flex'); // Ensure flex/block display if needed
-        }
-        if (dashboardContent) dashboardContent.classList.add('hidden');
-        return;
-    }
-    
-    // Token exists? Hide login modal and show dashboard
-    if (loginModal) loginModal.classList.add('hidden');
-    if (dashboardContent) dashboardContent.classList.remove('hidden');
-    
-    if (typeof fetchBookingsData === 'function') {
-        fetchBookingsData();
-    }
-};
-
-window.handleLogout = function() {
-    // 1. Wipe the token from local storage
-    localStorage.removeItem('access_token');
-    
-    // 2. Reload the page to cleanly reset state and trigger window.onload
-    window.location.reload();
-};
-
-// Optional: Auto-attach if signout-btn exists in the DOM
-document.addEventListener('DOMContentLoaded', () => {
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-        signoutBtn.addEventListener('click', window.handleLogout);
-    }
-});
-</script>
-
-
-
-  
-<script>
- // 1. Protect the page on load: Check if token exists
-window.onload = function() {
-    const token = localStorage.getItem('access_token');
-    const loginModal = document.getElementById('loginModal');
-    const dashboardContent = document.getElementById('dashboardContent');
-
-    if (!token) {
-        // No token? Hide dashboard and force login modal visible
-        if (loginModal) {
-            loginModal.classList.remove('hidden');
-            loginModal.classList.add('flex'); // Ensure flex/block display if needed
-        }
-        if (dashboardContent) dashboardContent.classList.add('hidden');
-        return;
-    }
-    
-    // Token exists? Hide login modal and show dashboard
-    if (loginModal) loginModal.classList.add('hidden');
-    if (dashboardContent) dashboardContent.classList.remove('hidden');
-    
-    if (typeof fetchBookingsData === 'function') {
-        fetchBookingsData();
-    }
-};
-
-function switchView(viewName) {
-    document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
-    
-    ['overview', 'reservations', 'menu', 'settings'].forEach(name => {
-        const nav = document.getElementById(`nav-${name}`);
-        if(nav) {
-            nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
-        }
-    });
-
-    document.getElementById(`view-${viewName}`).classList.remove('hidden');
-    const activeNav = document.getElementById(`nav-${viewName}`);
-    if(activeNav) {
-        activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
-    }
-
-    const titles = {
-        'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
-        'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' },
-        'menu': { title: 'Menu & Items', sub: 'Update dishes, prices, and availability.' },
-        'settings': { title: 'Settings', sub: 'Manage your portal configuration.' }
-    };
-    document.getElementById('page-title').innerText = titles[viewName].title;
-    document.getElementById('page-subtitle').innerText = titles[viewName].sub;
-
-    fetchBookingsData();
-}
-
-function fetchBookingsData() {
-    const token = localStorage.getItem('access_token');
-
-    fetch('/api/bookings', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        const container = document.getElementById('full-bookings-list');
-        container.innerHTML = '';
-        
-        if(!data || data.length === 0) {
-            container.innerHTML = '<p class="text-xs text-stone-500 py-4">No reservations found.</p>';
-            updateCounters(0, 0, 0, 0);
-            return;
+            updateCounters(
+                pendingCount,
+                confirmedCount,
+                completedCount,
+                cancelledCount
+            );
         }
 
-        let pendingCount = 0;
-        let confirmedCount = 0;
-        let completedCount = 0;
-        let cancelledCount = 0;
 
-        data.forEach(booking => {
-            const status = (booking.status || 'pending').toLowerCase();
-            if (status === 'pending') pendingCount++;
-            else if (status === 'confirmed') confirmedCount++;
-            else if (status === 'completed') completedCount++;
-            else if (status === 'cancelled' || status === 'rejected') cancelledCount++;
+        /*
+        ============================================================
+        BOOKING HTML
+        ============================================================
+        */
 
-            container.innerHTML += `
-                <div class="py-4 flex justify-between items-center border-b border-stone-100">
-                    <div>
-                        <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
-                        <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
-                        <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
+        function createBookingHTML(
+            booking,
+            actionList = false
+        ) {
+
+            const id =
+                escapeHTML(
+                    booking.id
+                );
+
+
+            const fullName =
+                escapeHTML(
+                    booking.full_name || 'Guest'
+                );
+
+
+            const email =
+                escapeHTML(
+                    booking.email || ''
+                );
+
+
+            const phone =
+                escapeHTML(
+                    booking.phone || ''
+                );
+
+
+            const date =
+                escapeHTML(
+                    booking.booking_date || 'N/A'
+                );
+
+
+            const time =
+                escapeHTML(
+                    booking.booking_time || 'N/A'
+                );
+
+
+            const guests =
+                escapeHTML(
+                    booking.guests || 'N/A'
+                );
+
+
+            const specialRequests =
+                escapeHTML(
+                    booking.special_requests || ''
+                );
+
+
+            const status =
+                String(
+                    booking.status || 'pending'
+                ).toLowerCase();
+
+
+            /*
+            Status colour
+            */
+
+            let statusClass =
+                'bg-amber-50 text-amber-700';
+
+
+            if (status === 'confirmed') {
+
+                statusClass =
+                    'bg-emerald-50 text-emerald-700';
+
+            } else if (status === 'completed') {
+
+                statusClass =
+                    'bg-blue-50 text-blue-700';
+
+            } else if (
+                status === 'cancelled' ||
+                status === 'rejected'
+            ) {
+
+                statusClass =
+                    'bg-red-50 text-red-700';
+
+            }
+
+
+            /*
+            Customer initials
+            */
+
+            const initials =
+                escapeHTML(
+                    (booking.full_name || 'Guest')
+                        .substring(0, 2)
+                        .toUpperCase()
+                );
+
+
+            /*
+            Pending action version
+            */
+
+            if (actionList) {
+
+                return `
+                    <div
+                        class="p-5 md:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5"
+                    >
+
+                        <div class="flex items-start space-x-4">
+
+                            <div
+                                class="w-11 h-11 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-sm flex-shrink-0"
+                            >
+                                ${initials}
+                            </div>
+
+                            <div>
+
+                                <h3 class="text-sm font-bold text-stone-900">
+                                    ${fullName}
+                                </h3>
+
+                                <p class="text-xs text-stone-500 mt-1">
+                                    ${date}
+                                    •
+                                    ${time}
+                                    •
+                                    ${guests} Guests
+                                </p>
+
+                                ${
+                                    specialRequests
+                                    ? `
+                                        <p class="text-xs text-stone-400 mt-2">
+                                            ${specialRequests}
+                                        </p>
+                                    `
+                                    : ''
+                                }
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="flex flex-wrap items-center gap-2 w-full lg:w-auto"
+                        >
+
+                            <button
+                                type="button"
+                                class="booking-action px-3 py-2 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition"
+                                data-booking-id="${id}"
+                                data-status="confirmed"
+                            >
+                                Confirm
+                            </button>
+
+                            <button
+                                type="button"
+                                class="booking-action px-3 py-2 border border-red-200 text-red-700 bg-red-50 font-semibold text-xs rounded-lg hover:bg-red-100 transition"
+                                data-booking-id="${id}"
+                                data-status="rejected"
+                            >
+                                Reject
+                            </button>
+
+                        </div>
+
                     </div>
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 border-b border-stone-100">
-                    <span class="px-2.5 py-1 ${status === 'confirmed' || status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
-                        <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
-                        <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
-                         <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
+                `;
+
+            }
+
+
+            /*
+            Full reservation version
+            */
+
+            return `
+                <div
+                    class="p-5 md:px-6 border-b border-stone-100 last:border-b-0"
+                >
+
+                    <div
+                        class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5"
+                    >
+
+                        <!-- Customer -->
+                        <div class="min-w-0">
+
+                            <p class="text-sm font-bold text-stone-900">
+                                ${fullName}
+                            </p>
+
+                            <p class="text-xs text-stone-500 mt-1 break-all">
+                                ${email}
+                                ${email && phone ? ' • ' : ''}
+                                ${phone}
+                            </p>
+
+                            <p class="text-xs text-stone-400 mt-2">
+                                ${date}
+                                at
+                                ${time}
+                                •
+                                ${guests} Guests
+                            </p>
+
+                            ${
+                                specialRequests
+                                ? `
+                                    <p class="text-xs text-stone-500 mt-2">
+                                        <span class="font-semibold">
+                                            Request:
+                                        </span>
+                                        ${specialRequests}
+                                    </p>
+                                `
+                                : ''
+                            }
+
+                        </div>
+
+
+                        <!-- Actions -->
+                        <div
+                            class="flex flex-wrap items-center gap-2"
+                        >
+
+                            <span
+                                class="px-3 py-1.5 ${statusClass} font-semibold text-xs rounded-full capitalize"
+                            >
+                                ${escapeHTML(status)}
+                            </span>
+
+
+                            ${
+                                status === 'pending'
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="booking-action px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition"
+                                        data-booking-id="${id}"
+                                        data-status="confirmed"
+                                    >
+                                        Confirm
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="booking-action px-3 py-1.5 border border-red-200 text-red-700 bg-red-50 font-semibold text-xs rounded-lg hover:bg-red-100 transition"
+                                        data-booking-id="${id}"
+                                        data-status="rejected"
+                                    >
+                                        Reject
+                                    </button>
+                                `
+                                : ''
+                            }
+
+
+                            ${
+                                status === 'confirmed'
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="booking-action px-3 py-1.5 bg-blue-600 text-white font-semibold text-xs rounded-lg hover:bg-blue-700 transition"
+                                        data-booking-id="${id}"
+                                        data-status="completed"
+                                    >
+                                        Mark Completed
+                                    </button>
+                                `
+                                : ''
+                            }
+
+                        </div>
+
                     </div>
+
                 </div>
             `;
-        });
-
-        updateCounters(pendingCount, confirmedCount, completedCount, cancelledCount);
-    })
-    .catch(err => console.error("Error fetching bookings:", err));
-}
-
-function updateCounters(pending, confirmed, completed, cancelled) {
-    document.getElementById('pending-count').textContent = pending;
-    document.getElementById('confirmed-count').textContent = confirmed;
-    document.getElementById('completed-count').textContent = completed;
-    document.getElementById('cancelled-count').textContent = cancelled;
-}
-
-function updateStatus(bookingId, newStatus) {
-    const token = localStorage.getItem('access_token');
-
-    fetch(`/api/bookings/${bookingId}/status`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-    })
-    .then(res => res.json())
-    .then(data => {
-        fetchBookingsData();
-    })
-    .catch(err => console.error("Error updating status:", err));
-}
-
-window.onload = function() {
-    const token = localStorage.getItem('access_token');
-    const loginModal = document.getElementById('loginModal');
-    const dashboardContent = document.getElementById('dashboardContent');
-
-    if (!token) {
-        // No token? Hide dashboard and force login modal visible
-        if (loginModal) {
-            loginModal.classList.remove('hidden');
-            loginModal.classList.add('flex'); // Ensure flex/block display if needed
-        }
-        if (dashboardContent) dashboardContent.classList.add('hidden');
-        return;
-    }
-    
-    // Token exists? Hide login modal and show dashboard
-    if (loginModal) loginModal.classList.add('hidden');
-    if (dashboardContent) dashboardContent.classList.remove('hidden');
-    
-    if (typeof fetchBookingsData === 'function') {
-        fetchBookingsData();
-    }
-};
-
-// Optional: Auto-attach if signout-btn exists in the DOM
-document.addEventListener('DOMContentLoaded', () => {
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-        signoutBtn.addEventListener('click', window.handleLogout);
-    }
-});
-
-function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    mobileMenu.classList.toggle('hidden');
-}
-
- </script>
-
-
-
-
-<script>
-    // 1. Check if already logged in on page load
-  window.onload = function() {
-    const token = localStorage.getItem('access_token');
-    const loginModal = document.getElementById('loginModal');
-    const dashboardContent = document.getElementById('dashboardContent');
-
-    if (!token) {
-        // No token? Hide dashboard and force login modal visible
-        if (loginModal) {
-            loginModal.classList.remove('hidden');
-            loginModal.classList.add('flex'); // Ensure flex/block display if needed
-        }
-        if (dashboardContent) dashboardContent.classList.add('hidden');
-        return;
-    }
-    
-    // Token exists? Hide login modal and show dashboard
-    if (loginModal) loginModal.classList.add('hidden');
-    if (dashboardContent) dashboardContent.classList.remove('hidden');
-    
-    if (typeof fetchBookingsData === 'function') {
-        fetchBookingsData();
-    }
-};
-
-    // 2. Handle Login Form Submission
-  // 1. Handle submission when you type your credentials and click Sign In
-async function handleLogin(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-
-        if (error) {
-            alert("Login failed: " + error.message);
-            return;
         }
 
-        // Save session token and reload to reveal the dashboard
-        if (data.session && data.session.access_token) {
-            localStorage.setItem('access_token', data.session.access_token);
-            window.location.reload();
-        }
-    } catch (err) {
-        console.error("Login error:", err);
-        alert("An error occurred during sign in.");
-    }
-}
 
-// 2. Handle signing out
-async function handleLogout() {
-    await supabase.auth.signOut();
-    localStorage.removeItem('access_token');
-    window.location.reload();
-}
+        /*
+        ============================================================
+        ERROR STATE
+        ============================================================
+        */
 
-// 3. Automatically check auth status when the page loads
-document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem('access_token');
-    const dashboard = document.getElementById('dashboardContent');
-    const modal = document.getElementById('loginModal');
+        function renderBookingsError(message) {
 
-    if (!token) {
-        // No token found: hide dashboard content and show the login modal
-        if (dashboard) dashboard.classList.add('hidden');
-        if (modal) modal.classList.remove('hidden');
-    } else {
-        // Token exists: show dashboard and hide modal
-        if (dashboard) dashboard.classList.remove('hidden');
-        if (modal) modal.classList.add('hidden');
-    }
-});
-    // 5. Fetch Bookings Securely with Bearer Token
-    async function fetchBookings() {
-        const token = localStorage.getItem('access_token');
-        
-        if (!token) {
-            handleLogout();
-            return;
-        }
+            const fullContainer =
+                $('fullBookingsList');
 
-        try {
-            const response = await fetch('/api/bookings', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Unauthorized or failed request');
+            const actionContainer =
+                $('requiresActionList');
+
+
+            if (fullContainer) {
+
+                fullContainer.innerHTML = `
+                    <div class="p-8 text-center">
+
+                        <div class="mx-auto w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-3">
+
+                            <svg
+                                class="w-6 h-6 text-red-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 9v2m0 4h.01M10.29 3.86l-7.82 14a2 2 0 001.74 3h15.58a2 2 0 001.74-3l-7.82-14a2 2 0 00-3.48 0z"
+                                />
+                            </svg>
+
+                        </div>
+
+                        <p class="text-sm font-semibold text-red-700">
+                            ${escapeHTML(message)}
+                        </p>
+
+                        <button
+                            type="button"
+                            id="errorRetryButton"
+                            class="mt-4 px-4 py-2 bg-stone-900 text-white text-xs font-semibold rounded-lg hover:bg-stone-800"
+                        >
+                            Try Again
+                        </button>
+
+                    </div>
+                `;
+
             }
 
-            const bookings = await response.json();
-            const tableBody = document.getElementById('bookingsTableBody');
-            tableBody.innerHTML = '';
 
-            if (bookings.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-gray-500">No bookings found yet.</td></tr>`;
+            if (actionContainer) {
+
+                actionContainer.innerHTML = `
+                    <div class="p-6 text-center">
+                        <p class="text-sm text-stone-500">
+                            Unable to load pending requests.
+                        </p>
+                    </div>
+                `;
+
+            }
+
+
+            updateCounters(
+                0,
+                0,
+                0,
+                0
+            );
+
+
+            const retryButton =
+                $('errorRetryButton');
+
+
+            if (retryButton) {
+
+                retryButton.addEventListener(
+                    'click',
+                    fetchBookingsData
+                );
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        UPDATE COUNTERS
+        ============================================================
+        */
+
+        function updateCounters(
+            pending,
+            confirmed,
+            completed,
+            cancelled
+        ) {
+
+            if ($('pendingCount')) {
+
+                $('pendingCount').textContent =
+                    pending;
+
+            }
+
+
+            if ($('confirmedCount')) {
+
+                $('confirmedCount').textContent =
+                    confirmed;
+
+            }
+
+
+            if ($('completedCount')) {
+
+                $('completedCount').textContent =
+                    completed;
+
+            }
+
+
+            if ($('cancelledCount')) {
+
+                $('cancelledCount').textContent =
+                    cancelled;
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        UPDATE BOOKING STATUS
+        ============================================================
+        */
+
+        async function updateStatus(
+            bookingId,
+            newStatus
+        ) {
+
+            const token =
+                await getAccessToken();
+
+
+            if (!token) {
+
+                showLoginScreen();
+
                 return;
             }
 
-            bookings.forEach(booking => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition';
-                row.innerHTML = `
-                    <td class="py-4 px-6 font-medium text-gray-900">${booking.full_name || 'N/A'}</td>
-                    <td class="py-4 px-6">${booking.email || 'N/A'}</td>
-                    <td class="py-4 px-6">${booking.phone || 'N/A'}</td>
-                    <td class="py-4 px-6">${booking.booking_date || 'N/A'}</td>
-                    <td class="py-4 px-6">${booking.booking_time || 'N/A'}</td>
-                    <td class="py-4 px-6">${booking.guests || 'N/A'}</td>
-                    <td class="py-4 px-6 italic text-gray-500">${booking.special_requests || 'None'}</td>
-                `;
-                tableBody.appendChild(row);
+
+            if (!bookingId) {
+
+                console.error(
+                    'Missing booking ID.'
+                );
+
+                return;
+            }
+
+
+            /*
+            Find all buttons belonging to this booking
+            and disable them.
+            */
+
+            const buttons =
+                document.querySelectorAll(
+                    `[data-booking-id="${CSS.escape(String(bookingId))}"]`
+                );
+
+
+            buttons.forEach(button => {
+
+                button.disabled = true;
+
+                button.classList.add(
+                    'opacity-50',
+                    'cursor-not-allowed'
+                );
+
             });
-        } catch (error) {
-            console.error('Error fetching bookings:', error);
-            document.getElementById('bookingsTableBody').innerHTML = `<tr><td colspan="7" class="py-6 text-center text-red-500">Failed to load bookings from server.</td></tr>`;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/bookings/${encodeURIComponent(bookingId)}/status`,
+                        {
+                            method: 'PUT',
+
+                            headers: {
+
+                                'Content-Type':
+                                    'application/json',
+
+                                'Authorization':
+                                    `Bearer ${token}`
+
+                            },
+
+                            body: JSON.stringify({
+                                status: newStatus
+                            })
+                        }
+                    );
+
+
+                if (response.status === 401) {
+
+                    localStorage.removeItem(
+                        'access_token'
+                    );
+
+                    await supabaseClient.auth.signOut();
+
+                    showLoginScreen();
+
+                    return;
+                }
+
+
+                if (!response.ok) {
+
+                    let errorMessage =
+                        `Server returned ${response.status}`;
+
+
+                    try {
+
+                        const errorData =
+                            await response.json();
+
+
+                        if (errorData?.message) {
+
+                            errorMessage =
+                                errorData.message;
+
+                        } else if (errorData?.error) {
+
+                            errorMessage =
+                                errorData.error;
+
+                        }
+
+                    } catch (e) {
+
+                        /*
+                        Response wasn't JSON.
+                        */
+
+                    }
+
+
+                    throw new Error(
+                        errorMessage
+                    );
+                }
+
+
+                /*
+                Refresh bookings
+                */
+
+                await fetchBookingsData();
+
+
+                /*
+                Friendly message
+                */
+
+                const statusLabels = {
+
+                    confirmed: 'Booking confirmed.',
+
+                    rejected: 'Booking rejected.',
+
+                    cancelled: 'Booking cancelled.',
+
+                    completed: 'Booking marked as completed.'
+
+                };
+
+
+                showToast(
+                    statusLabels[newStatus] ||
+                    'Booking updated.'
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    'Error updating booking:',
+                    error
+                );
+
+
+                showToast(
+                    error.message ||
+                    'Could not update booking.'
+                );
+
+
+                /*
+                Re-enable buttons
+                */
+
+                buttons.forEach(button => {
+
+                    button.disabled = false;
+
+                    button.classList.remove(
+                        'opacity-50',
+                        'cursor-not-allowed'
+                    );
+
+                });
+
+            }
         }
-    }
-</script>
 
 
+        /*
+        ============================================================
+        SWITCH VIEW
+        ============================================================
+        */
+
+        function switchView(viewName) {
+
+            const overview =
+                $('view-overview');
+
+            const reservations =
+                $('view-reservations');
 
 
-    
+            /*
+            Hide all views
+            */
+
+            document
+                .querySelectorAll('.dashboard-view')
+                .forEach(view => {
+
+                    view.classList.add('hidden');
+
+                });
+
+
+            /*
+            Show selected
+            */
+
+            const target =
+                $(`view-${viewName}`);
+
+
+            if (target) {
+
+                target.classList.remove(
+                    'hidden'
+                );
+
+            }
+
+
+            /*
+            Update active desktop navigation
+            */
+
+            document
+                .querySelectorAll('.desktop-nav-button')
+                .forEach(button => {
+
+                    button.className =
+                        'desktop-nav-button w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition text-left';
+
+                });
+
+
+            const desktopButton =
+                document.querySelector(
+                    `.desktop-nav-button[data-view="${viewName}"]`
+                );
+
+
+            if (desktopButton) {
+
+                desktopButton.className =
+                    'desktop-nav-button w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition text-left';
+
+            }
+
+
+            /*
+            Update mobile navigation
+            */
+
+            document
+                .querySelectorAll('.mobile-nav-button')
+                .forEach(button => {
+
+                    button.className =
+                        'mobile-nav-button w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition text-left';
+
+                });
+
+
+            const mobileButton =
+                document.querySelector(
+                    `.mobile-nav-button[data-view="${viewName}"]`
+                );
+
+
+            if (mobileButton) {
+
+                mobileButton.className =
+                    'mobile-nav-button w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-stone-900 text-white font-medium text-sm transition text-left';
+
+            }
+
+
+            /*
+            Page title
+            */
+
+            const titles = {
+
+                overview: {
+
+                    title: 'Overview',
+
+                    sub:
+                        "Welcome back. Here is what's happening at the restaurant today."
+
+                },
+
+                reservations: {
+
+                    title: 'Reservations',
+
+                    sub:
+                        'View and manage all customer table bookings.'
+
+                }
+
+            };
+
+
+            if (titles[viewName]) {
+
+                $('pageTitle').textContent =
+                    titles[viewName].title;
+
+                $('pageSubtitle').textContent =
+                    titles[viewName].sub;
+
+            }
+
+
+            currentView =
+                viewName;
+
+
+            /*
+            Close mobile menu
+            */
+
+            closeMobileMenu();
+
+
+            /*
+            Load latest data
+            */
+
+            if (
+                viewName === 'overview' ||
+                viewName === 'reservations'
+            ) {
+
+                fetchBookingsData();
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        MOBILE MENU
+        ============================================================
+        */
+
+        function openMobileMenu() {
+
+            const menu =
+                $('mobileMenu');
+
+            if (!menu) {
+                return;
+            }
+
+            menu.classList.remove(
+                'hidden'
+            );
+
+            document.body.classList.add(
+                'menu-open'
+            );
+        }
+
+
+        function closeMobileMenu() {
+
+            const menu =
+                $('mobileMenu');
+
+            if (!menu) {
+                return;
+            }
+
+            menu.classList.add(
+                'hidden'
+            );
+
+            document.body.classList.remove(
+                'menu-open'
+            );
+        }
+
+
+        function toggleMobileMenu() {
+
+            const menu =
+                $('mobileMenu');
+
+            if (!menu) {
+                return;
+            }
+
+
+            if (
+                menu.classList.contains(
+                    'hidden'
+                )
+            ) {
+
+                openMobileMenu();
+
+            } else {
+
+                closeMobileMenu();
+
+            }
+        }
+
+
+        /*
+        ============================================================
+        EVENT LISTENERS
+        ============================================================
+        */
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            () => {
+
+                /*
+                Login form
+                */
+
+                const loginForm =
+                    $('loginForm');
+
+
+                if (loginForm) {
+
+                    loginForm.addEventListener(
+                        'submit',
+                        handleLogin
+                    );
+
+                }
+
+
+                /*
+                Logout
+                */
+
+                const logoutButton =
+                    $('logoutButton');
+
+
+                if (logoutButton) {
+
+                    logoutButton.addEventListener(
+                        'click',
+                        handleLogout
+                    );
+
+                }
+
+
+                const mobileLogoutButton =
+                    $('mobileLogoutButton');
+
+
+                if (mobileLogoutButton) {
+
+                    mobileLogoutButton.addEventListener(
+                        'click',
+                        handleLogout
+                    );
+
+                }
+
+
+                /*
+                Refresh
+                */
+
+                const refreshButton =
+                    $('refreshButton');
+
+
+                if (refreshButton) {
+
+                    refreshButton.addEventListener(
+                        'click',
+                        fetchBookingsData
+                    );
+
+                }
+
+
+                /*
+                Desktop navigation
+                */
+
+                document
+                    .querySelectorAll(
+                        '.desktop-nav-button'
+                    )
+                    .forEach(button => {
+
+                        button.addEventListener(
+                            'click',
+                            () => {
+
+                                switchView(
+                                    button.dataset.view
+                                );
+
+                            }
+                        );
+
+                    });
+
+
+                /*
+                Mobile navigation
+                */
+
+                document
+                    .querySelectorAll(
+                        '.mobile-nav-button'
+                    )
+                    .forEach(button => {
+
+                        button.addEventListener(
+                            'click',
+                            () => {
+
+                                switchView(
+                                    button.dataset.view
+                                );
+
+                            }
+                        );
+
+                    });
+
+
+                /*
+                "View All"
+                */
+
+                document
+                    .querySelectorAll(
+                        '.view-reservations-button'
+                    )
+                    .forEach(button => {
+
+                        button.addEventListener(
+                            'click',
+                            () => {
+
+                                switchView(
+                                    'reservations'
+                                );
+
+                            }
+                        );
+
+                    });
+
+
+                /*
+                Mobile hamburger
+                */
+
+                const mobileMenuButton =
+                    $('mobileMenuButton');
+
+
+                if (mobileMenuButton) {
+
+                    mobileMenuButton.addEventListener(
+                        'click',
+                        openMobileMenu
+                    );
+
+                }
+
+
+                /*
+                Mobile close
+                */
+
+                const mobileCloseButton =
+                    $('mobileCloseButton');
+
+
+                if (mobileCloseButton) {
+
+                    mobileCloseButton.addEventListener(
+                        'click',
+                        closeMobileMenu
+                    );
+
+                }
+
+
+                /*
+                Click outside mobile menu
+                */
+
+                const mobileMenuBackdrop =
+                    $('mobileMenuBackdrop');
+
+
+                if (mobileMenuBackdrop) {
+
+                    mobileMenuBackdrop.addEventListener(
+                        'click',
+                        closeMobileMenu
+                    );
+
+                }
+
+
+                /*
+                Booking action buttons.
+
+                Event delegation means we don't need
+                inline onclick attributes.
+                */
+
+                document.addEventListener(
+                    'click',
+                    event => {
+
+                        const button =
+                            event.target.closest(
+                                '.booking-action'
+                            );
+
+
+                        if (!button) {
+                            return;
+                        }
+
+
+                        const bookingId =
+                            button.dataset.bookingId;
+
+
+                        const status =
+                            button.dataset.status;
+
+
+                        if (
+                            bookingId &&
+                            status
+                        ) {
+
+                            updateStatus(
+                                bookingId,
+                                status
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                Escape key closes mobile menu
+                */
+
+                document.addEventListener(
+                    'keydown',
+                    event => {
+
+                        if (
+                            event.key === 'Escape'
+                        ) {
+
+                            closeMobileMenu();
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                Finally initialize authentication
+                */
+
+                initializeAuthentication();
+
+            }
+        );
+
+    </script>
+
 </body>
 </html>
