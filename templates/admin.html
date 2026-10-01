@@ -192,40 +192,51 @@
 
     <script>
     // 1. Fetch bookings and populate data on load
-    window.onload = function() {
+    // 1. Fetch bookings and populate data on load
+window.onload = function() {
     const token = localStorage.getItem('access_token');
-    
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
     if (!token) {
-        // No token? Just show the login modal and hide the dashboard
-        document.getElementById('loginModal').classList.remove('hidden');
-        document.getElementById('dashboardContent').classList.add('hidden');
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
         return;
     }
     
-    // Token exists? Show the dashboard and load data
-    showDashboard();
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
 };
 
-    // 2. Unified Logout Handler
-    function handleLogout() {
+// 2. Unified Logout Handler
+window.handleLogout = function() {
     // 1. Wipe the token from local storage
     localStorage.removeItem('access_token');
     
-    // 2. Hide the dashboard and show the login modal
-    document.getElementById('dashboardContent').classList.add('hidden');
-    document.getElementById('loginModal').classList.remove('hidden');
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
     
-    // 3. Optional: Clear any input fields in the login form
-    document.getElementById('loginForm').reset();
-}
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
 
-    // Optional: Auto-attach if signout-btn exists in the DOM
-    document.addEventListener('DOMContentLoaded', () => {
-        const signoutBtn = document.getElementById('signout-btn');
-        if (signoutBtn) {
-            signoutBtn.addEventListener('click', handleLogout);
-        }
-    });
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
 
     function switchView(viewName) {
         document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
@@ -489,32 +500,51 @@
         .catch(err => console.error("Error updating status:", err));
     }
 
-    function handleLogout() {
-    // 1. Wipe the token from local storage
-    localStorage.removeItem('access_token');
-    
-    // 2. Hide the dashboard and show the login modal
-    document.getElementById('dashboardContent').classList.add('hidden');
-    document.getElementById('loginModal').classList.remove('hidden');
-    
-    // 3. Optional: Clear any input fields in the login form
-    document.getElementById('loginForm').reset();
-}
-
-    // Load data initially when the page opens
-    window.onload = function() {
+    // 1. Fetch bookings and populate data on load
+window.onload = function() {
     const token = localStorage.getItem('access_token');
-    
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
     if (!token) {
-        // No token? Just show the login modal and hide the dashboard
-        document.getElementById('loginModal').classList.remove('hidden');
-        document.getElementById('dashboardContent').classList.add('hidden');
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
         return;
     }
     
-    // Token exists? Show the dashboard and load data
-    showDashboard();
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
 };
+
+// 2. Unified Logout Handler
+window.handleLogout = function() {
+    // 1. Wipe the token from local storage
+    localStorage.removeItem('access_token');
+    
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
+    
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
 </script>
 
 
@@ -524,16 +554,20 @@
  // 1. Protect the page on load: Check if token exists
 window.onload = function() {
     const token = localStorage.getItem('access_token');
-    
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
     if (!token) {
-        // No token? Just show the login modal and hide the dashboard
-        document.getElementById('loginModal').classList.remove('hidden');
-        document.getElementById('dashboardContent').classList.add('hidden');
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
         return;
     }
     
-    // Token exists? Show the dashboard and load data
-    showDashboard();
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
 };
 
 function switchView(viewName) {
@@ -642,17 +676,31 @@ function updateStatus(bookingId, newStatus) {
     .catch(err => console.error("Error updating status:", err));
 }
 
-function handleLogout() {
+window.handleLogout = function() {
     // 1. Wipe the token from local storage
     localStorage.removeItem('access_token');
     
-    // 2. Hide the dashboard and show the login modal
-    document.getElementById('dashboardContent').classList.add('hidden');
-    document.getElementById('loginModal').classList.remove('hidden');
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
     
-    // 3. Optional: Clear any input fields in the login form
-    document.getElementById('loginForm').reset();
-}
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
 
 function toggleMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
@@ -666,18 +714,22 @@ function toggleMobileMenu() {
 
 <script>
     // 1. Check if already logged in on page load
-    window.onload = function() {
+   window.onload = function() {
     const token = localStorage.getItem('access_token');
-    
+    const loginModal = document.getElementById('loginModal');
+    const dashboardContent = document.getElementById('dashboardContent');
+
     if (!token) {
-        // No token? Just show the login modal and hide the dashboard
-        document.getElementById('loginModal').classList.remove('hidden');
-        document.getElementById('dashboardContent').classList.add('hidden');
+        // No token? Just show the login modal and hide the dashboard safely
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (dashboardContent) dashboardContent.classList.add('hidden');
         return;
     }
     
-    // Token exists? Show the dashboard and load data
-    showDashboard();
+    // Token exists? Show the dashboard
+    if (typeof showDashboard === 'function') {
+        showDashboard();
+    }
 };
 
     // 2. Handle Login Form Submission
@@ -718,17 +770,31 @@ function toggleMobileMenu() {
     }
 
     // 4. Logout Function
-    function handleLogout() {
+    window.handleLogout = function() {
     // 1. Wipe the token from local storage
     localStorage.removeItem('access_token');
     
-    // 2. Hide the dashboard and show the login modal
-    document.getElementById('dashboardContent').classList.add('hidden');
-    document.getElementById('loginModal').classList.remove('hidden');
+    // 2. Hide the dashboard and show the login modal safely
+    const dashboardContent = document.getElementById('dashboardContent');
+    const loginModal = document.getElementById('loginModal');
     
-    // 3. Optional: Clear any input fields in the login form
-    document.getElementById('loginForm').reset();
-}
+    if (dashboardContent) dashboardContent.classList.add('hidden');
+    if (loginModal) loginModal.classList.remove('hidden');
+    
+    // 3. Optional: Clear any input fields in the login form safely
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && typeof loginForm.reset === 'function') {
+        loginForm.reset();
+    }
+};
+
+// Optional: Auto-attach if signout-btn exists in the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', window.handleLogout);
+    }
+});
 
     // 5. Fetch Bookings Securely with Bearer Token
     async function fetchBookings() {
