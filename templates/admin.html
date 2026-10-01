@@ -28,26 +28,28 @@
         </div>
     </div>
 
-    <!-- Mobile Top Navigation Bar (Visible only on small screens) -->
-    <nav class="bg-stone-900 text-white shadow-md md:hidden">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16 items-center">
-                <span class="text-lg font-bold tracking-wide">The Lounge</span>
-                <!-- Mobile Hamburger Button -->
-                <button id="menu-btn" class="text-stone-300 hover:text-white focus:outline-none p-2 rounded-md">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <!-- Mobile Dropdown Menu -->
-        <div id="mobile-menu" class="hidden px-4 pt-2 pb-4 space-y-2 border-t border-stone-800 bg-stone-900">
-            <button onclick="switchView('overview'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-stone-800 text-stone-300 hover:text-white">Overview</button>
-            <button onclick="switchView('reservations'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-stone-800 text-stone-300 hover:text-white">Reservations</button>
-            <button onclick="logout()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-stone-800">Sign Out</button>
-        </div>
-    </nav>
+    <!-- Top Header with Built-in Mobile Hamburger Button -->
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+        <!-- Mobile Hamburger Button (Shows only on mobile screens) -->
+        <button id="menu-btn" onclick="toggleMobileMenu()" class="md:hidden text-stone-700 hover:text-stone-900 focus:outline-none p-1 rounded-md">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        <h2 class="text-lg font-bold text-stone-900" id="pageTitle">Dashboard Overview</h2>
+    </div>
+    <div class="flex items-center space-x-4">
+        <span class="text-sm font-medium text-stone-600 hidden sm:inline" id="adminUserEmail">admin@thelounge.local</span>
+    </div>
+</header>
+
+<!-- Mobile Dropdown Drawer (Appears right below header when clicked) -->
+<div id="mobile-menu" class="hidden md:hidden bg-white border-b border-stone-200 px-6 py-4 space-y-3 shadow-sm">
+    <button onclick="switchView('overview'); toggleMobileMenu();" class="block w-full text-left py-2 text-sm font-medium text-stone-700 hover:text-stone-900">Overview</button>
+    <button onclick="switchView('reservations'); toggleMobileMenu();" class="block w-full text-left py-2 text-sm font-medium text-stone-700 hover:text-stone-900">Reservations</button>
+    <button onclick="logout()" class="block w-full text-left py-2 text-sm font-medium text-red-600">Sign Out</button>
+</div>
 
     <!-- Dashboard Layout -->
     <div class="flex h-screen overflow-hidden">
@@ -120,18 +122,9 @@
         </main>
     </div>
 
-    <!-- Mobile Menu Toggle Script -->
-    <script>
-        const menuBtn = document.getElementById('menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        function toggleMobileMenu() {
-            mobileMenu.classList.toggle('hidden');
-        }
-
-        menuBtn.addEventListener('click', toggleMobileMenu);
-    </script>
+   
     
+
     <!-- Script Logic -->
     <script>
         // Token Management via Local Storage
@@ -326,5 +319,19 @@
             checkSession();
         });
     </script>
+
+
+ <!-- Mobile Menu Toggle Script -->
+<script>
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    function toggleMobileMenu() {
+        mobileMenu.classList.toggle('hidden');
+    }
+
+    menuBtn.addEventListener('click', toggleMobileMenu);
+</script>
+
 </body>
 </html>
