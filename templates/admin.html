@@ -1,1929 +1,697 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>The Lounge - Admin Dashboard</title>
-
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Font -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <!-- Supabase JS Client Library -->
+    <!-- 1. Load Supabase library -->
+<!-- 1. Load Supabase library first -->
 
-    <!-- Supabase JS v2 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-    </style>
-</head>
-
-<body class="bg-stone-50 text-stone-800 flex h-screen overflow-hidden">
-
-<!-- ========================================================= -->
-<!-- LOGIN MODAL -->
-<!-- ========================================================= -->
-
-<div
-    id="loginModal"
-    class="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-sm flex items-center justify-center"
->
-    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border border-stone-200 mx-4">
-
-        <div class="text-center mb-6">
-
-            <div class="mx-auto mb-4 w-12 h-12 rounded-xl bg-stone-900 flex items-center justify-center text-white text-xl font-bold">
-                L
-            </div>
-
-            <h2 class="text-xl font-bold text-stone-900">
-                The Lounge Admin
-            </h2>
-
-            <p class="text-xs text-stone-500 mt-1">
-                Please sign in to access the dashboard
-            </p>
-
-        </div>
-
-        <!-- Login error -->
-        <div
-            id="loginError"
-            class="hidden mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"
-        ></div>
-
-        <form
-            id="loginForm"
-            class="space-y-4"
-        >
-
-            <!-- Email -->
-            <div>
-
-                <label
-                    for="email"
-                    class="block text-xs font-semibold text-stone-700 uppercase mb-1"
-                >
-                    Email Address
-                </label>
-
-                <input
-                    type="email"
-                    id="email"
-                    required
-                    autocomplete="email"
-                    class="w-full px-3 py-2.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
-                    placeholder="admin@example.com"
-                >
-
-            </div>
-
-            <!-- Password -->
-            <div>
-
-                <label
-                    for="password"
-                    class="block text-xs font-semibold text-stone-700 uppercase mb-1"
-                >
-                    Password
-                </label>
-
-                <input
-                    type="password"
-                    id="password"
-                    required
-                    autocomplete="current-password"
-                    class="w-full px-3 py-2.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
-                    placeholder="••••••••"
-                >
-
-            </div>
-
-            <!-- Submit -->
-            <button
-                id="loginButton"
-                type="submit"
-                class="w-full py-2.5 bg-stone-900 text-white font-semibold text-sm rounded-lg hover:bg-stone-800 transition"
-            >
-                Sign In
-            </button>
-
-        </form>
-
-    </div>
-</div>
-
-
-<!-- ========================================================= -->
-<!-- MOBILE MENU -->
-<!-- ========================================================= -->
-
-<div
-    id="mobile-menu"
-    class="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-sm hidden md:hidden"
->
-
-    <div class="w-64 bg-white h-full flex flex-col justify-between shadow-xl">
-
-        <div>
-
-            <!-- Mobile Logo -->
-            <div class="p-6 flex items-center justify-between border-b border-stone-100">
-
-                <div class="flex items-center space-x-3">
-
-                    <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">
-                        L
-                    </div>
-
-                    <span class="font-bold text-lg tracking-tight">
-                        The Lounge
-                    </span>
-
-                </div>
-
-                <button
-                    onclick="toggleMobileMenu()"
-                    class="text-stone-400 hover:text-stone-700"
-                >
-                    ✕
-                </button>
-
-            </div>
-
-            <!-- Mobile Navigation -->
-            <nav class="p-4 space-y-1">
-
-                <a
-                    href="#"
-                    onclick="switchView('overview'); toggleMobileMenu(); return false;"
-                    class="flex items-center px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm"
-                >
-                    Overview
-                </a>
-
-                <a
-                    href="#"
-                    onclick="switchView('reservations'); toggleMobileMenu(); return false;"
-                    class="flex items-center px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm"
-                >
-                    Reservations
-                </a>
-
-            </nav>
-
-        </div>
-
-        <!-- Mobile Sign Out -->
-        <div class="p-4 border-t border-stone-200">
-
-            <button
-                onclick="handleLogout()"
-                class="w-full py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50"
-            >
-                Sign out
-            </button>
-
-        </div>
-
-    </div>
-
-    <!-- Click outside -->
-    <div
-        class="flex-1"
-        onclick="toggleMobileMenu()"
-    ></div>
-
-</div>
-
-
-<!-- ========================================================= -->
-<!-- DESKTOP SIDEBAR -->
-<!-- ========================================================= -->
-
-<aside
-    class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex"
->
-
-    <div>
-
-        <!-- Logo -->
-        <div class="p-6 flex items-center space-x-3 border-b border-stone-100">
-
-            <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">
-                L
-            </div>
-
-            <span class="font-bold text-lg tracking-tight">
-                The Lounge Admin
-            </span>
-
-        </div>
-
-        <!-- Navigation -->
-        <nav class="p-4 space-y-1">
-
-            <a
-                href="#"
-                id="nav-overview"
-                onclick="switchView('overview'); return false;"
-                class="flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition"
-            >
-                <span>Overview</span>
-            </a>
-
-            <a
-                href="#"
-                id="nav-reservations"
-                onclick="switchView('reservations'); return false;"
-                class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition"
-            >
-                <span>Reservations</span>
-            </a>
-
-        </nav>
-
-    </div>
-
-
-    <!-- User Footer -->
-    <div class="p-4 border-t border-stone-200">
-
-        <p class="text-xs text-stone-400 font-medium uppercase tracking-wider">
-            Signed in as
-        </p>
-
-        <p
-            id="signedInEmail"
-            class="text-xs font-semibold text-stone-700 truncate mb-3"
-        >
-            —
-        </p>
-
-        <button
-            onclick="handleLogout()"
-            class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition"
-        >
-            <span>Sign out</span>
-        </button>
-
-    </div>
-
-</aside>
-
-
-<!-- ========================================================= -->
-<!-- MAIN DASHBOARD -->
-<!-- ========================================================= -->
-
-<main
-    id="dashboardContent"
-    class="flex-1 flex flex-col overflow-y-auto hidden"
->
-
-    <!-- Header -->
-    <header
-        class="bg-white border-b border-stone-200 px-5 md:px-8 py-4 flex justify-between items-center"
-    >
-
-        <div class="flex items-center space-x-4">
-
-            <!-- Mobile hamburger -->
-            <button
-                onclick="toggleMobileMenu()"
-                class="md:hidden text-stone-600 hover:text-stone-900"
-            >
-                ☰
-            </button>
-
-            <div>
-
-                <h1
-                    id="page-title"
-                    class="text-xl font-bold text-stone-900"
-                >
-                    Overview
-                </h1>
-
-                <p
-                    id="page-subtitle"
-                    class="text-xs text-stone-500"
-                >
-                    Welcome back. Here is what's happening at the restaurant today.
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- Refresh -->
-        <button
-            onclick="fetchBookingsData()"
-            class="px-3 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50"
-        >
-            Refresh
-        </button>
-
-    </header>
-
-
-    <!-- ===================================================== -->
-    <!-- OVERVIEW -->
-    <!-- ===================================================== -->
-
-    <section
-        id="view-overview"
-        class="dashboard-view p-5 md:p-8 space-y-6"
-    >
-
-        <!-- Statistics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-            <!-- Pending -->
-            <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
-
-                <div class="flex items-center justify-between mb-3">
-
-                    <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                        Pending Requests
-                    </span>
-
-                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                        ⏱
-                    </div>
-
-                </div>
-
-                <div class="flex items-baseline space-x-2">
-
-                    <span
-                        id="pending-count"
-                        class="text-3xl font-extrabold text-stone-900"
-                    >
-                        0
-                    </span>
-
-                    <span class="text-xs text-amber-600 font-medium">
-                        Needs review
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- Confirmed -->
-            <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
-
-                <div class="flex items-center justify-between mb-3">
-
-                    <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                        Confirmed
-                    </span>
-
-                    <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        ✓
-                    </div>
-
-                </div>
-
-                <div class="flex items-baseline space-x-2">
-
-                    <span
-                        id="confirmed-count"
-                        class="text-3xl font-extrabold text-stone-900"
-                    >
-                        0
-                    </span>
-
-                    <span class="text-xs text-emerald-600 font-medium">
-                        Upcoming
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- Completed -->
-            <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
-
-                <div class="flex items-center justify-between mb-3">
-
-                    <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                        Completed
-                    </span>
-
-                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                        ✓
-                    </div>
-
-                </div>
-
-                <div class="flex items-baseline space-x-2">
-
-                    <span
-                        id="completed-count"
-                        class="text-3xl font-extrabold text-stone-900"
-                    >
-                        0
-                    </span>
-
-                    <span class="text-xs text-blue-600 font-medium">
-                        Completed
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- Cancelled -->
-            <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
-
-                <div class="flex items-center justify-between mb-3">
-
-                    <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                        Cancelled
-                    </span>
-
-                    <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
-                        ×
-                    </div>
-
-                </div>
-
-                <div class="flex items-baseline space-x-2">
-
-                    <span
-                        id="cancelled-count"
-                        class="text-3xl font-extrabold text-stone-900"
-                    >
-                        0
-                    </span>
-
-                    <span class="text-xs text-red-600 font-medium">
-                        Cancelled
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- Requires Action -->
-        <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
-
-            <div class="p-6 border-b border-stone-100 flex justify-between items-center">
-
-                <div>
-
-                    <h2 class="text-base font-bold text-stone-900">
-                        Requires Action
-                    </h2>
-
-                    <p class="text-xs text-stone-500 mt-1">
-                        Table booking requests awaiting confirmation
-                    </p>
-
-                </div>
-
-                <button
-                    onclick="switchView('reservations')"
-                    class="text-xs font-semibold text-stone-900 hover:underline"
-                >
-                    View All →
-                </button>
-
-            </div>
-
-            <div
-                id="requires-action-list"
-                class="divide-y divide-stone-100"
-            >
-                <p class="text-xs text-stone-500 py-6 px-6">
-                    Loading...
-                </p>
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- ===================================================== -->
-    <!-- RESERVATIONS -->
-    <!-- ===================================================== -->
-
-    <section
-        id="view-reservations"
-        class="dashboard-view p-5 md:p-8 space-y-6 hidden"
-    >
-
-        <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
-
-            <div class="p-6 border-b border-stone-100">
-
-                <h2 class="text-base font-bold text-stone-900">
-                    All Customer Reservations
-                </h2>
-
-                <p class="text-xs text-stone-500 mt-1">
-                    Manage customer table bookings.
-                </p>
-
-            </div>
-
-            <div
-                id="full-bookings-list"
-                class="divide-y divide-stone-100"
-            >
-                <p class="text-xs text-stone-500 py-6 px-6">
-                    Loading...
-                </p>
-            </div>
-
-        </div>
-
-    </section>
-
-</main>
-
-
-<!-- ========================================================= -->
-<!-- JAVASCRIPT -->
-<!-- ========================================================= -->
 
 <script>
-
-/* ============================================================
-   SUPABASE CONFIGURATION
-   ============================================================ */
-
-const SUPABASE_URL =
-    "https://eryvwusmaswlqsydifwi.supabase.co";
-
-const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODMyMDMsImV4cCI6MjEwMjM1OTIwM30.8mlxIRjQLtyPNJtgPb-cKSo6_j2qZEnp7WL952ZLTHM";
+    // 2. Initialize and name it global 'supabase' explicitly
+    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    
+    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
 
 
-/*
-    IMPORTANT:
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
 
-    Do NOT do this:
-
-        window.supabase = window.supabase.createClient(...)
-
-    That destroys the Supabase library object.
-
-    Instead we create a separate client.
-*/
-
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-    );
-
-
-/* ============================================================
-   DOM READY
-   ============================================================ */
-
-document.addEventListener("DOMContentLoaded", async () => {
-
-    console.log("The Lounge Admin loaded.");
-
-    const loginForm =
-        document.getElementById("loginForm");
-
-    if (loginForm) {
-        loginForm.addEventListener(
-            "submit",
-            handleLogin
-        );
-    }
-
-    await checkAuthentication();
-
-});
+</head>
+<body>
+<!-- Login Modal Overlay -->
+<div id="loginModal" class="fixed inset-0 z-50 bg-stone-900/80 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border border-stone-200">
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-bold text-stone-900">The Lounge Admin</h2>
+            <p class="text-xs text-stone-500 mt-1">Please sign in to access the dashboard</p>
+        </div>
+        
+        <!-- Make sure this <form> tag with onsubmit is here -->
+        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+            <div>
+                <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Email Address</label>
+                <input type="email" id="email" required class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Password</label>
+                <input type="password" id="password" required class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900">
+            </div>
+            <button type="submit" class="w-full py-2.5 bg-stone-900 text-white font-semibold text-sm rounded-lg hover:bg-stone-800 transition">
+                Sign In
+            </button>
+        </form>
+    </div>
+</div>
 
 
-/* ============================================================
-   AUTHENTICATION
-   ============================================================ */
 
-async function checkAuthentication() {
 
-    try {
 
-        const {
-            data,
-            error
-        } = await supabaseClient.auth.getSession();
 
-        if (error) {
-            console.error(
-                "Session error:",
-                error
-            );
 
-            showLogin();
-            return;
-        }
 
-        const session = data.session;
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
+        <div>
+            <!-- Brand / Logo Area -->
+            <div class="p-6 flex items-center space-x-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
+                <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+            </div>
 
-        if (!session) {
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1">
+                <a href="#" onclick="switchView('overview')" id="nav-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span>Overview</span>
+                </a>
+                <a href="#" onclick="switchView('reservations')" id="nav-reservations" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Reservations</span>
+                </a>
+            </nav>
+        </div>
 
-            showLogin();
+        <!-- Signed In User Footer -->
+        <div class="p-4 border-t border-stone-200">
+            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider">Signed in as</p>
+            <p class="text-xs font-semibold text-stone-700 truncate mb-3">thelounge2024@hotmail.com</p>
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
+                <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Sign out</span>
+            </button>
+        </div>
+    </aside>
 
-            return;
-        }
+<!-- Mobile Sidebar Overlay Menu -->
+<div id="mobile-menu" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm hidden md:hidden flex">
+    <div class="w-64 bg-white h-full flex flex-col justify-between shadow-xl">
+        <div>
+            <div class="p-6 flex items-center justify-between border-b border-stone-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
+                    <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+                </div>
+                <!-- Close Button -->
+                <button onclick="toggleMobileMenu()" class="text-stone-400 hover:text-stone-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <nav class="p-4 space-y-1">
+                <a href="#" onclick="switchView('overview'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
+                    <span>Overview</span>
+                </a>
+                <a href="#" onclick="switchView('reservations'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
+                    <span>Reservations</span>
+                </a>
+            </nav>
+        </div>
+        <div class="p-4 border-t border-stone-200">
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
+                <span>Sign out</span>
+            </button>
+        </div>
+    </div>
+    <!-- Click outside to close -->
+    <div class="flex-1" onclick="toggleMobileMenu()"></div>
+</div>
 
-        /*
-            Save access token for your backend API.
-        */
 
-        localStorage.setItem(
-            "access_token",
-            session.access_token
-        );
 
-        showDashboard(
-            session.user
-        );
 
-        await fetchBookingsData();
 
-    } catch (error) {
 
-        console.error(
-            "Authentication check failed:",
-            error
-        );
 
-        showLogin();
+<!-- Main Content Area -->
+    <main id="dashboardContent"  class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Top Navigation Header -->
+        <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+        <!-- Hamburger Menu Toggle Button -->
+        <button onclick="toggleMobileMenu()" class="md:hidden text-stone-600 hover:text-stone-900 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
 
-    }
 
+            <div>
+                <h1 id="page-title" class="text-xl font-bold text-stone-900">Overview</h1>
+                <p id="page-subtitle" class="text-xs text-stone-500">Welcome back. Here is what's happening at the restaurant today.</p>
+            </div>
+        </header>
+
+        <!-- VIEW 1: OVERVIEW -->
+        <div id="view-overview" class="dashboard-view p-8 space-y-6">
+            <!-- Metric Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Pending Requests</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="pending-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-amber-600 font-medium">Needs review</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Confirmed Bookings</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="confirmed-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-emerald-600 font-medium">Upcoming</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Completed Bookings</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="completed-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-emerald-600 font-medium">Completed</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Cancelled Bookings</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="cancelled-count" class="text-3xl font-extrabold text-stone-900">0</span>
+                        <span class="text-xs text-emerald-600 font-medium">Cancelled</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requires Action Section -->
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
+                <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-stone-900">Requires Action</h2>
+                        <p class="text-xs text-stone-500">Table booking requests awaiting confirmation</p>
+                    </div>
+                    <a href="#" onclick="switchView('reservations')" class="text-xs font-semibold text-stone-900 hover:underline flex items-center space-x-1">
+                        <span>View All</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+                <div id="requires-action-list" class="divide-y divide-stone-100">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: RESERVATIONS -->
+        <div id="view-reservations" class="dashboard-view p-8 space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+                <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
+                <div id="full-bookings-list" class="divide-y divide-stone-100">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+<script>
+/* =========================================================
+   THE LOUNGE ADMIN DASHBOARD
+   Clean single-source frontend logic
+   ========================================================= */
+
+const API_BASE = "";
+
+const state = {
+    token: localStorage.getItem("admin_token") || "",
+    bookings: []
+};
+
+const $ = (id) => document.getElementById(id);
+
+function authHeaders(json = false) {
+    const headers = {};
+    if (json) headers["Content-Type"] = "application/json";
+    if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
+    return headers;
 }
-
-
-/* ============================================================
-   SHOW LOGIN
-   ============================================================ */
 
 function showLogin() {
-
-    const modal =
-        document.getElementById("loginModal");
-
-    const dashboard =
-        document.getElementById("dashboardContent");
-
-    if (modal) {
-
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-
-    }
-
-    if (dashboard) {
-
-        dashboard.classList.add("hidden");
-
-    }
-
+    const modal = $("loginModal");
+    if (modal) modal.classList.remove("hidden");
 }
 
-
-/* ============================================================
-   SHOW DASHBOARD
-   ============================================================ */
-
-function showDashboard(user) {
-
-    const modal =
-        document.getElementById("loginModal");
-
-    const dashboard =
-        document.getElementById("dashboardContent");
-
-    if (modal) {
-
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-
-    }
-
-    if (dashboard) {
-
-        dashboard.classList.remove("hidden");
-
-    }
-
-    const emailElement =
-        document.getElementById("signedInEmail");
-
-    if (emailElement && user) {
-
-        emailElement.textContent =
-            user.email || "Admin";
-
-    }
-
+function hideLogin() {
+    const modal = $("loginModal");
+    if (modal) modal.classList.add("hidden");
 }
 
+function showDashboard() {
+    hideLogin();
+    document.body.classList.remove("dashboard-locked");
+}
 
-/* ============================================================
-   LOGIN
-   ============================================================ */
+function logout() {
+    localStorage.removeItem("admin_token");
+    state.token = "";
+    state.bookings = [];
+    showLogin();
+}
 
-async function handleLogin(event) {
+async function apiFetch(url, options = {}) {
+    const response = await fetch(`${API_BASE}${url}`, {
+        ...options,
+        headers: {
+            ...authHeaders(Boolean(options.body)),
+            ...(options.headers || {})
+        }
+    });
 
+    if (response.status === 401) {
+        logout();
+        throw new Error("Your session has expired. Please log in again.");
+    }
+
+    let payload = null;
+    try {
+        payload = await response.json();
+    } catch (_) {}
+
+    if (!response.ok) {
+        throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`);
+    }
+
+    return payload;
+}
+
+function normalizeStatus(status) {
+    const value = String(status || "pending").toLowerCase();
+
+    // Backwards compatibility with the old "rejected" value.
+    if (value === "rejected") return "cancelled";
+
+    if (["pending", "confirmed", "completed", "cancelled"].includes(value)) {
+        return value;
+    }
+
+    return "pending";
+}
+
+function formatStatus(status) {
+    const normalized = normalizeStatus(status);
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return escapeHtml(value);
+
+    return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function formatTime(value) {
+    if (!value) return "—";
+    return escapeHtml(value);
+}
+
+function getBookingName(booking) {
+    return booking.full_name || booking.fullName || booking.name || "Unknown customer";
+}
+
+function getBookingEmail(booking) {
+    return booking.email || "—";
+}
+
+function getBookingPhone(booking) {
+    return booking.phone || "—";
+}
+
+function getBookingGuests(booking) {
+    return booking.guests ?? booking.number_of_guests ?? "—";
+}
+
+function getBookingDate(booking) {
+    return booking.booking_date || booking.bookingDate || booking.date || "";
+}
+
+function getBookingTime(booking) {
+    return booking.booking_time || booking.bookingTime || booking.time || "";
+}
+
+function getBookingRequests(booking) {
+    return booking.special_requests || booking.specialRequests || "";
+}
+
+function statusClasses(status) {
+    switch (normalizeStatus(status)) {
+        case "confirmed":
+            return "bg-green-100 text-green-800";
+        case "completed":
+            return "bg-blue-100 text-blue-800";
+        case "cancelled":
+            return "bg-red-100 text-red-800";
+        default:
+            return "bg-yellow-100 text-yellow-800";
+    }
+}
+
+function updateCounters() {
+    const counts = {
+        pending: 0,
+        confirmed: 0,
+        completed: 0,
+        cancelled: 0
+    };
+
+    state.bookings.forEach(booking => {
+        counts[normalizeStatus(booking.status)]++;
+    });
+
+    const mappings = {
+        pending: ["pendingCount", "pendingBookings", "pending-count"],
+        confirmed: ["confirmedCount", "confirmedBookings", "confirmed-count"],
+        completed: ["completedCount", "completedBookings", "completed-count"],
+        cancelled: ["cancelledCount", "cancelledBookings", "cancelled-count"]
+    };
+
+    Object.entries(mappings).forEach(([status, ids]) => {
+        ids.forEach(id => {
+            const element = $(id);
+            if (element) element.textContent = counts[status];
+        });
+    });
+}
+
+function renderBookings() {
+    const containers = [
+        $("reservationsTableBody"),
+        $("bookingsTableBody"),
+        $("reservationsList"),
+        $("bookingsList")
+    ].filter(Boolean);
+
+    if (!containers.length) return;
+
+    const rows = state.bookings.length
+        ? state.bookings.map(booking => {
+            const status = normalizeStatus(booking.status);
+            const id = booking.id;
+            const name = getBookingName(booking);
+            const date = getBookingDate(booking);
+            const time = getBookingTime(booking);
+
+            return `
+                <tr class="border-b">
+                    <td class="px-4 py-4">
+                        <div class="font-medium text-gray-900">${escapeHtml(name)}</div>
+                        <div class="text-sm text-gray-500">${escapeHtml(getBookingEmail(booking))}</div>
+                    </td>
+                    <td class="px-4 py-4 text-sm">
+                        <div>${formatDate(date)}</div>
+                        <div class="text-gray-500">${formatTime(time)}</div>
+                    </td>
+                    <td class="px-4 py-4 text-sm">${escapeHtml(getBookingGuests(booking))}</td>
+                    <td class="px-4 py-4">
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClasses(status)}">
+                            ${formatStatus(status)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="flex flex-wrap gap-2">
+                            ${status !== "confirmed" && status !== "completed" ? `
+                                <button onclick="updateStatus('${escapeHtml(id)}','confirmed')"
+                                    class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700">
+                                    Confirm
+                                </button>` : ""}
+                            ${status !== "completed" ? `
+                                <button onclick="updateStatus('${escapeHtml(id)}','completed')"
+                                    class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                                    Complete
+                                </button>` : ""}
+                            ${status !== "cancelled" ? `
+                                <button onclick="updateStatus('${escapeHtml(id)}','cancelled')"
+                                    class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
+                                    Cancel
+                                </button>` : ""}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("")
+        : `
+            <tr>
+                <td colspan="5" class="px-4 py-12 text-center text-gray-500">
+                    No reservations found.
+                </td>
+            </tr>
+        `;
+
+    containers.forEach(container => {
+        // Table bodies should receive rows. List containers can also display the rows.
+        container.innerHTML = rows;
+    });
+}
+
+function renderRequiresAction() {
+    const container =
+        $("requiresActionList") ||
+        $("requiresAction") ||
+        $("actionList");
+
+    if (!container) return;
+
+    const pending = state.bookings.filter(
+        booking => normalizeStatus(booking.status) === "pending"
+    );
+
+    if (!pending.length) {
+        container.innerHTML = `
+            <div class="rounded-lg border border-gray-200 p-5 text-sm text-gray-500">
+                No bookings require action.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = pending.map(booking => `
+        <div class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <p class="font-semibold text-gray-900">${escapeHtml(getBookingName(booking))}</p>
+                <p class="text-sm text-gray-500">
+                    ${formatDate(getBookingDate(booking))} · ${formatTime(getBookingTime(booking))}
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="updateStatus('${escapeHtml(booking.id)}','confirmed')"
+                    class="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700">
+                    Confirm
+                </button>
+                <button onclick="updateStatus('${escapeHtml(booking.id)}','cancelled')"
+                    class="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function renderAll() {
+    updateCounters();
+    renderBookings();
+    renderRequiresAction();
+}
+
+async function fetchBookingsData() {
+    try {
+        const data = await apiFetch("/api/bookings");
+        state.bookings = Array.isArray(data) ? data : (data.bookings || []);
+        renderAll();
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+    }
+}
+
+async function updateStatus(bookingId, status) {
+    const normalized = normalizeStatus(status);
+
+    if (!bookingId) return;
+
+    try {
+        await apiFetch(`/api/bookings/${encodeURIComponent(bookingId)}/status`, {
+            method: "PUT",
+            body: JSON.stringify({ status: normalized })
+        });
+
+        await fetchBookingsData();
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+    }
+}
+
+function switchView(view) {
+    const overview = $("overviewView");
+    const reservations = $("reservationsView");
+
+    if (overview) overview.classList.toggle("hidden", view !== "overview");
+    if (reservations) reservations.classList.toggle("hidden", view !== "reservations");
+
+    document.querySelectorAll("[data-view]").forEach(button => {
+        button.classList.toggle("font-semibold", button.dataset.view === view);
+    });
+}
+
+function toggleMobileMenu() {
+    const menu = $("mobileMenu") || $("sidebar");
+    if (menu) menu.classList.toggle("hidden");
+}
+
+async function login(event) {
     event.preventDefault();
 
     const email =
-        document.getElementById("email").value.trim();
+        $("loginEmail")?.value?.trim() ||
+        $("username")?.value?.trim() ||
+        $("email")?.value?.trim();
 
     const password =
-        document.getElementById("password").value;
+        $("loginPassword")?.value ||
+        $("password")?.value;
 
-    const loginButton =
-        document.getElementById("loginButton");
+    if (!email || !password) {
+        alert("Please enter your email and password.");
+        return;
+    }
 
-    const loginError =
-        document.getElementById("loginError");
-
-
-    /*
-        Clear previous error.
-    */
-
-    loginError.classList.add("hidden");
-    loginError.textContent = "";
-
-
-    /*
-        Prevent double clicking.
-    */
-
-    loginButton.disabled = true;
-    loginButton.textContent = "Signing in...";
-
+    const button = event.submitter || $("loginButton");
 
     try {
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Signing in...";
+        }
 
-        console.log(
-            "Attempting Supabase login..."
-        );
-
-
-        const {
-            data,
-            error
-        } = await supabaseClient.auth.signInWithPassword({
-
-            email: email,
-
-            password: password
-
+        const response = await fetch(`${API_BASE}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: email,
+                password
+            })
         });
 
+        const data = await response.json();
 
-        if (error) {
-
-            console.error(
-                "Supabase login error:",
-                error
-            );
-
-            loginError.textContent =
-                error.message ||
-                "Invalid email or password.";
-
-            loginError.classList.remove(
-                "hidden"
-            );
-
-            return;
+        if (!response.ok || !data.success || !data.access_token) {
+            throw new Error(data.error || "Invalid login credentials.");
         }
 
+        state.token = data.access_token;
+        localStorage.setItem("admin_token", state.token);
 
-        if (!data.session) {
-
-            loginError.textContent =
-                "Login succeeded, but no session was returned.";
-
-            loginError.classList.remove(
-                "hidden"
-            );
-
-            return;
-        }
-
-
-        /*
-            Save JWT for your API.
-        */
-
-        localStorage.setItem(
-            "access_token",
-            data.session.access_token
-        );
-
-
-        console.log(
-            "Login successful."
-        );
-
-
-        /*
-            Show dashboard without needing
-            multiple window.onload handlers.
-        */
-
-        showDashboard(
-            data.session.user
-        );
-
-
-        /*
-            Load bookings.
-        */
-
+        showDashboard();
         await fetchBookingsData();
 
-
     } catch (error) {
-
-        console.error(
-            "Login error:",
-            error
-        );
-
-        loginError.textContent =
-            "An unexpected error occurred while signing in.";
-
-        loginError.classList.remove(
-            "hidden"
-        );
-
+        alert(error.message);
     } finally {
-
-        loginButton.disabled = false;
-
-        loginButton.textContent =
-            "Sign In";
-
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Login";
+        }
     }
-
 }
 
-
-/* ============================================================
-   LOGOUT
-   ============================================================ */
-
-async function handleLogout() {
-
-    try {
-
-        await supabaseClient.auth.signOut();
-
-    } catch (error) {
-
-        console.error(
-            "Supabase logout error:",
-            error
-        );
-
-    }
-
-    localStorage.removeItem(
-        "access_token"
-    );
-
-    showLogin();
-
-}
-
-
-/* ============================================================
-   SUPABASE AUTH STATE LISTENER
-   ============================================================ */
-
-supabaseClient.auth.onAuthStateChange(
-    async (event, session) => {
-
-        console.log(
-            "Auth event:",
-            event
-        );
-
-
-        if (session) {
-
-            localStorage.setItem(
-                "access_token",
-                session.access_token
-            );
-
-            showDashboard(
-                session.user
-            );
-
-        } else {
-
-            localStorage.removeItem(
-                "access_token"
-            );
-
-            showLogin();
-
-        }
-
-    }
-);
-
-
-/* ============================================================
-   NAVIGATION
-   ============================================================ */
-
-function switchView(viewName) {
-
-    /*
-        Hide all views.
-    */
-
-    document
-        .querySelectorAll(".dashboard-view")
-        .forEach(view => {
-
-            view.classList.add("hidden");
-
-        });
-
-
-    /*
-        Reset navigation buttons.
-    */
-
-    [
-        "overview",
-        "reservations"
-    ].forEach(name => {
-
-        const nav =
-            document.getElementById(
-                `nav-${name}`
-            );
-
-        if (nav) {
-
-            nav.className =
-                "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
-
-        }
-
-    });
-
-
-    /*
-        Show selected view.
-    */
-
-    const targetView =
-        document.getElementById(
-            `view-${viewName}`
-        );
-
-    if (targetView) {
-
-        targetView.classList.remove(
-            "hidden"
-        );
-
-    }
-
-
-    /*
-        Highlight navigation.
-    */
-
-    const activeNav =
-        document.getElementById(
-            `nav-${viewName}`
-        );
-
-    if (activeNav) {
-
-        activeNav.className =
-            "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
-
-    }
-
-
-    /*
-        Page titles.
-    */
-
-    const titles = {
-
-        overview: {
-
-            title: "Overview",
-
-            sub:
-                "Welcome back. Here is what's happening at the restaurant today."
-
-        },
-
-        reservations: {
-
-            title: "Reservations",
-
-            sub:
-                "View and manage all customer table bookings."
-
-        }
-
-    };
-
-
-    if (titles[viewName]) {
-
-        document.getElementById(
-            "page-title"
-        ).textContent =
-            titles[viewName].title;
-
-        document.getElementById(
-            "page-subtitle"
-        ).textContent =
-            titles[viewName].sub;
-
-    }
-
-
-    /*
-        Refresh booking data.
-    */
-
-    fetchBookingsData();
-
-}
-
-
-/* ============================================================
-   FETCH BOOKINGS
-   ============================================================ */
-
-async function fetchBookingsData() {
-
-    const token =
-        localStorage.getItem(
-            "access_token"
-        );
-
-
-    if (!token) {
-
+async function checkAuthentication() {
+    if (!state.token) {
         showLogin();
-
         return;
-
     }
-
-
-    const container =
-        document.getElementById(
-            "full-bookings-list"
-        );
-
-    const actionContainer =
-        document.getElementById(
-            "requires-action-list"
-        );
-
-
-    if (container) {
-
-        container.innerHTML = `
-            <p class="text-xs text-stone-500 py-6 px-6">
-                Loading reservations...
-            </p>
-        `;
-
-    }
-
-
-    if (actionContainer) {
-
-        actionContainer.innerHTML = `
-            <p class="text-xs text-stone-500 py-6 px-6">
-                Loading...
-            </p>
-        `;
-
-    }
-
 
     try {
-
-        const response =
-            await fetch(
-                "/api/bookings",
-                {
-                    method: "GET",
-
-                    headers: {
-
-                        "Authorization":
-                            `Bearer ${token}`,
-
-                        "Content-Type":
-                            "application/json"
-
-                    }
-
-                }
-            );
-
-
-        /*
-            If your backend says unauthorized,
-            remove the stale token and return to login.
-        */
-
-        if (
-            response.status === 401 ||
-            response.status === 403
-        ) {
-
-            console.error(
-                "API authentication failed."
-            );
-
-            localStorage.removeItem(
-                "access_token"
-            );
-
-            showLogin();
-
-            return;
-
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Bookings API returned ${response.status}`
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        console.log(
-            "Bookings:",
-            data
-        );
-
-
-        /*
-            Make sure we actually received
-            an array.
-        */
-
-        const bookings =
-            Array.isArray(data)
-                ? data
-                : (
-                    Array.isArray(data.bookings)
-                        ? data.bookings
-                        : []
-                );
-
-
-        renderBookings(
-            bookings
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Error fetching bookings:",
-            error
-        );
-
-
-        if (container) {
-
-            container.innerHTML = `
-                <div class="p-6">
-
-                    <p class="text-sm font-semibold text-red-600">
-                        Failed to load reservations.
-                    </p>
-
-                    <p class="text-xs text-stone-500 mt-1">
-                        ${escapeHtml(error.message)}
-                    </p>
-
-                    <button
-                        onclick="fetchBookingsData()"
-                        class="mt-4 px-3 py-2 bg-stone-900 text-white rounded-lg text-xs font-semibold"
-                    >
-                        Try Again
-                    </button>
-
-                </div>
-            `;
-
-        }
-
-    }
-
-}
-
-
-/* ============================================================
-   RENDER BOOKINGS
-   ============================================================ */
-
-function renderBookings(bookings) {
-
-    const container =
-        document.getElementById(
-            "full-bookings-list"
-        );
-
-    const actionContainer =
-        document.getElementById(
-            "requires-action-list"
-        );
-
-
-    /*
-        Counters.
-    */
-
-    let pendingCount = 0;
-
-    let confirmedCount = 0;
-
-    let completedCount = 0;
-
-    let cancelledCount = 0;
-
-
-    /*
-        Empty state.
-    */
-
-    if (!bookings || bookings.length === 0) {
-
-        if (container) {
-
-            container.innerHTML = `
-                <p class="text-xs text-stone-500 py-6 px-6">
-                    No reservations found.
-                </p>
-            `;
-
-        }
-
-        if (actionContainer) {
-
-            actionContainer.innerHTML = `
-                <p class="text-xs text-stone-500 py-6 px-6">
-                    No pending requests.
-                </p>
-            `;
-
-        }
-
-        updateCounters(
-            0,
-            0,
-            0,
-            0
-        );
-
-        return;
-
-    }
-
-
-    let allHTML = "";
-
-    let pendingHTML = "";
-
-
-    /*
-        Process every booking.
-    */
-
-    bookings.forEach(booking => {
-
-        const status =
-            String(
-                booking.status || "pending"
-            ).toLowerCase();
-
-
-        /*
-            Count statuses.
-        */
-
-        if (status === "pending") {
-
-            pendingCount++;
-
-        } else if (status === "confirmed") {
-
-            confirmedCount++;
-
-        } else if (status === "completed") {
-
-            completedCount++;
-
-        } else if (
-            status === "cancelled" ||
-            status === "rejected"
-        ) {
-
-            cancelledCount++;
-
-        }
-
-
-        /*
-            Generate HTML.
-        */
-
-        const html =
-            createBookingHTML(
-                booking,
-                status
-            );
-
-
-        allHTML += html;
-
-
-        if (status === "pending") {
-
-            pendingHTML += html;
-
-        }
-
-    });
-
-
-    /*
-        Insert reservations.
-    */
-
-    if (container) {
-
-        container.innerHTML =
-            allHTML;
-
-    }
-
-
-    /*
-        Insert pending reservations.
-    */
-
-    if (actionContainer) {
-
-        if (pendingHTML) {
-
-            actionContainer.innerHTML =
-                pendingHTML;
-
-        } else {
-
-            actionContainer.innerHTML = `
-                <p class="text-xs text-stone-500 py-6 px-6">
-                    No pending requests awaiting confirmation.
-                </p>
-            `;
-
-        }
-
-    }
-
-
-    /*
-        Update statistics.
-    */
-
-    updateCounters(
-        pendingCount,
-        confirmedCount,
-        completedCount,
-        cancelledCount
-    );
-
-}
-
-
-/* ============================================================
-   CREATE BOOKING HTML
-   ============================================================ */
-
-function createBookingHTML(
-    booking,
-    status
-) {
-
-    const id =
-        escapeHtml(
-            String(
-                booking.id || ""
-            )
-        );
-
-
-    const name =
-        escapeHtml(
-            booking.full_name || "Guest"
-        );
-
-
-    const email =
-        escapeHtml(
-            booking.email || ""
-        );
-
-
-    const phone =
-        escapeHtml(
-            booking.phone || ""
-        );
-
-
-    const date =
-        escapeHtml(
-            booking.booking_date || "N/A"
-        );
-
-
-    const time =
-        escapeHtml(
-            booking.booking_time || "N/A"
-        );
-
-
-    const guests =
-        escapeHtml(
-            String(
-                booking.guests || "N/A"
-            )
-        );
-
-
-    const requests =
-        escapeHtml(
-            booking.special_requests || ""
-        );
-
-
-    const statusText =
-        escapeHtml(
-            booking.status || "pending"
-        );
-
-
-    /*
-        Status colours.
-    */
-
-    let statusClasses =
-        "bg-amber-50 text-amber-700";
-
-
-    if (status === "confirmed") {
-
-        statusClasses =
-            "bg-emerald-50 text-emerald-700";
-
-    }
-
-
-    if (status === "completed") {
-
-        statusClasses =
-            "bg-blue-50 text-blue-700";
-
-    }
-
-
-    if (
-        status === "cancelled" ||
-        status === "rejected"
-    ) {
-
-        statusClasses =
-            "bg-red-50 text-red-700";
-
-    }
-
-
-    /*
-        Action buttons.
-    */
-
-    let buttons = "";
-
-
-    if (status === "pending") {
-
-        buttons = `
-
-            <button
-                onclick="updateStatus('${id}', 'confirmed')"
-                class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition"
-            >
-                Confirm
-            </button>
-
-            <button
-                onclick="updateStatus('${id}', 'rejected')"
-                class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition"
-            >
-                Reject
-            </button>
-
-        `;
-
-    }
-
-
-    if (status === "confirmed") {
-
-        buttons = `
-
-            <button
-                onclick="updateStatus('${id}', 'completed')"
-                class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition"
-            >
-                Completed
-            </button>
-
-            <button
-                onclick="updateStatus('${id}', 'cancelled')"
-                class="px-3 py-1.5 border border-red-200 text-red-600 font-semibold text-xs rounded-lg hover:bg-red-50 transition"
-            >
-                Cancel
-            </button>
-
-        `;
-
-    }
-
-
-    return `
-
-        <div class="p-5 md:p-6 border-b border-stone-100">
-
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-
-                <!-- Customer -->
-                <div class="flex items-start space-x-4">
-
-                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-sm flex-shrink-0">
-
-                        ${escapeHtml(
-                            name
-                                .substring(0, 2)
-                                .toUpperCase()
-                        )}
-
-                    </div>
-
-                    <div>
-
-                        <h3 class="text-sm font-bold text-stone-900">
-                            ${name}
-                        </h3>
-
-                        <p class="text-xs text-stone-500 mt-1">
-                            ${email}
-                            ${phone ? ` • ${phone}` : ""}
-                        </p>
-
-                        <p class="text-xs text-stone-500 mt-1">
-                            ${date}
-                            •
-                            ${time}
-                            •
-                            ${guests}
-                            ${guests === "1" ? "Guest" : "Guests"}
-                        </p>
-
-                        ${
-                            requests
-                                ? `
-                                    <p class="text-xs text-stone-400 mt-2">
-                                        <strong>Request:</strong>
-                                        ${requests}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <!-- Status + Actions -->
-                <div class="flex flex-wrap items-center gap-2">
-
-                    <span
-                        class="px-2.5 py-1 ${statusClasses} font-semibold text-xs rounded-full"
-                    >
-                        ${statusText}
-                    </span>
-
-                    ${buttons}
-
-                </div>
-
-            </div>
-
-        </div>
-
-    `;
-
-}
-
-
-/* ============================================================
-   UPDATE BOOKING STATUS
-   ============================================================ */
-
-async function updateStatus(
-    bookingId,
-    newStatus
-) {
-
-    const token =
-        localStorage.getItem(
-            "access_token"
-        );
-
-
-    if (!token) {
-
-        showLogin();
-
-        return;
-
-    }
-
-
-    try {
-
-        console.log(
-            `Updating ${bookingId} to ${newStatus}`
-        );
-
-
-        const response =
-            await fetch(
-                `/api/bookings/${encodeURIComponent(bookingId)}/status`,
-                {
-                    method: "PUT",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Authorization":
-                            `Bearer ${token}`
-
-                    },
-
-                    body:
-                        JSON.stringify({
-                            status: newStatus
-                        })
-
-                }
-            );
-
-
-        if (
-            response.status === 401 ||
-            response.status === 403
-        ) {
-
-            localStorage.removeItem(
-                "access_token"
-            );
-
-            showLogin();
-
-            return;
-
-        }
-
-
-        if (!response.ok) {
-
-            let errorMessage =
-                `Server returned ${response.status}`;
-
-            try {
-
-                const errorData =
-                    await response.json();
-
-                if (errorData.message) {
-
-                    errorMessage =
-                        errorData.message;
-
-                }
-
-                if (errorData.error) {
-
-                    errorMessage =
-                        errorData.error;
-
-                }
-
-            } catch (e) {
-                // Ignore JSON parsing error
-            }
-
-
-            throw new Error(
-                errorMessage
-            );
-
-        }
-
-
-        /*
-            Reload bookings after update.
-        */
-
         await fetchBookingsData();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error updating booking:",
-            error
-        );
-
-        alert(
-            "Could not update booking: " +
-            error.message
-        );
-
+        showDashboard();
+    } catch (_) {
+        logout();
     }
-
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    // Connect existing login forms without requiring the original inline handlers.
+    const loginForm =
+        $("loginForm") ||
+        document.querySelector("#loginModal form");
 
-/* ============================================================
-   UPDATE COUNTERS
-   ============================================================ */
+    if (loginForm) loginForm.addEventListener("submit", login);
 
-function updateCounters(
-    pending,
-    confirmed,
-    completed,
-    cancelled
-) {
+    document.querySelectorAll("[data-view]").forEach(button => {
+        button.addEventListener("click", () => switchView(button.dataset.view));
+    });
 
-    const pendingElement =
-        document.getElementById(
-            "pending-count"
-        );
-
-    const confirmedElement =
-        document.getElementById(
-            "confirmed-count"
-        );
-
-    const completedElement =
-        document.getElementById(
-            "completed-count"
-        );
-
-    const cancelledElement =
-        document.getElementById(
-            "cancelled-count"
-        );
-
-
-    if (pendingElement) {
-
-        pendingElement.textContent =
-            pending;
-
-    }
-
-
-    if (confirmedElement) {
-
-        confirmedElement.textContent =
-            confirmed;
-
-    }
-
-
-    if (completedElement) {
-
-        completedElement.textContent =
-            completed;
-
-    }
-
-
-    if (cancelledElement) {
-
-        cancelledElement.textContent =
-            cancelled;
-
-    }
-
-}
-
-
-/* ============================================================
-   MOBILE MENU
-   ============================================================ */
-
-function toggleMobileMenu() {
-
-    const menu =
-        document.getElementById(
-            "mobile-menu"
-        );
-
-    if (!menu) return;
-
-    menu.classList.toggle(
-        "hidden"
+    const logoutButtons = document.querySelectorAll(
+        "#logoutButton, [data-action='logout']"
     );
+    logoutButtons.forEach(button => {
+        button.addEventListener("click", logout);
+    });
 
-}
+    const mobileButtons = document.querySelectorAll(
+        "#mobileMenuButton, [data-action='toggle-mobile-menu']"
+    );
+    mobileButtons.forEach(button => {
+        button.addEventListener("click", toggleMobileMenu);
+    });
 
+    checkAuthentication();
+});
 
-/* ============================================================
-   ESCAPE HTML
-   ============================================================ */
-
-function escapeHtml(value) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-    div.textContent =
-        value ?? "";
-
-    return div.innerHTML;
-
-}
-
+window.fetchBookingsData = fetchBookingsData;
+window.updateStatus = updateStatus;
+window.switchView = switchView;
+window.toggleMobileMenu = toggleMobileMenu;
+window.login = login;
+window.logout = logout;
 </script>
 
 </body>
 </html>
-
-        
