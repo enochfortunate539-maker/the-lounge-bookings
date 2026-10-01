@@ -1,15 +1,19 @@
 import os
 from functools import wraps
+from dotenv import load_dotenv  # <-- 1. Import load_dotenv
 
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from supabase import create_client, Client
 
+load_dotenv()  # <-- 2. Load the .env file automatically
+
 app = Flask(__name__)
 CORS(app)
 
-SUPABASE_URL = ("https://eryvwusmaswlqsydifwi.supabase.co")
-SUPABASE_SERVICE_ROLE_KEY = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njc4MzIwMywiZXhwIjoyMTAyMzU5MjAzfQ.MRdrBVbGMxr4akscT2z7g81sLH578NK0AW6SArpZhCQ")
+# 3. Now os.environ.get() will safely pull from your .env file automatically!
+SUPABASE_URL = os.environ.get("https://eryvwusmaswlqsydifwi.supabase.co")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njc4MzIwMywiZXhwIjoyMTAyMzU5MjAzfQ.MRdrBVbGMxr4akscT2z7g81sLH578NK0AW6SArpZhCQ")
 
 if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
     raise RuntimeError(
@@ -20,7 +24,6 @@ supabase: Client = create_client(
     SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY
 )
-
 
 # ---------------------------------------------------------
 # Authentication
