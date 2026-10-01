@@ -21,6 +21,7 @@
             <p class="text-xs text-stone-500 mt-1">Please sign in to access the dashboard</p>
         </div>
         
+        <!-- Make sure this <form> tag with onsubmit is here -->
         <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
             <div>
                 <label class="block text-xs font-semibold text-stone-700 uppercase mb-1">Email Address</label>
@@ -764,59 +765,58 @@ function toggleMobileMenu() {
 };
 
     // 2. Handle Login Form Submission
-    async function handleLogin(event) {
-        event.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const errorText = document.getElementById('loginError');
-
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Save token consistently to localStorage as 'access_token'
-                localStorage.setItem('access_token', data.access_token);
-                showDashboard();
-            } else {
-                errorText.classList.remove('hidden');
-                errorText.textContent = data.error || 'Invalid login credentials';
-            }
-        } catch (err) {
-            console.error('Login error:', err);
-            errorText.textContent = 'Server error. Is Flask running?';
-            errorText.classList.remove('hidden');
-        }
-    }
-
-    // 3. Show Dashboard UI
-    function showDashboard() {
-        document.getElementById('loginModal').classList.add('hidden');
-        document.getElementById('dashboardContent').classList.remove('hidden');
-        fetchBookings();
-    }
-
-    // 4. Logout Function
-   window.handleLogout = function() {
-    // 1. Wipe the token from local storage
-    localStorage.removeItem('access_token');
+  // 1. Handle submission when you type your credentials and click Sign In
+async function handleLogin(event) {
+    event.preventDefault();
     
-    // 2. Reload the page to cleanly reset state and trigger window.onload
-    window.location.reload();
-};
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-// Optional: Auto-attach if signout-btn exists in the DOM
-document.addEventListener('DOMContentLoaded', () => {
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-        signoutBtn.addEventListener('click', window.handleLogout);
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            alert("Login failed: " + error.message);
+            return;
+        }
+
+        // Save session token and reload to reveal the dashboard
+        if (data.session && data.session.access_token) {
+            localStorage.setItem('access_token', data.session.access_token);
+            window.location.reload();
+        }
+    } catch (err) {
+        console.error("Login error:", err);
+        alert("An error occurred during sign in.");
+    }
+}
+
+// 2. Handle signing out
+async function handleLogout() {
+    await supabase.auth.signOut();
+    localStorage.removeItem('access_token');
+    window.location.reload();
+}
+
+// 3. Automatically check auth status when the page loads
+document.addEventListener("DOMContentLoaded", async () => {
+    const token = localStorage.getItem('access_token');
+    const dashboard = document.getElementById('dashboardContent');
+    const modal = document.getElementById('loginModal');
+
+    if (!token) {
+        // No token found: hide dashboard content and show the login modal
+        if (dashboard) dashboard.classList.add('hidden');
+        if (modal) modal.classList.remove('hidden');
+    } else {
+        // Token exists: show dashboard and hide modal
+        if (dashboard) dashboard.classList.remove('hidden');
+        if (modal) modal.classList.add('hidden');
     }
 });
-
     // 5. Fetch Bookings Securely with Bearer Token
     async function fetchBookings() {
         const token = localStorage.getItem('access_token');
