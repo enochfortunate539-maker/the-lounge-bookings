@@ -9,15 +9,15 @@
 
     <!-- Supabase JS Client Library -->
     <!-- 1. Load Supabase library -->
+<!-- 1. Load Supabase library first -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-    // 2. Declare and initialize supabase EXACTLY ONCE
-    const SUPABASE_URL = 'https://eryvwusmaswlqsydifwi.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODMyMDMsImV4cCI6MjEwMjM1OTIwM30.8mlxIRjQLtyPNJtgPb-cKSo6_j2qZEnp7WL952ZLTHM';
+    // 2. Initialize and name it global 'supabase' explicitly
+    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
     
-    // Use window.supabase.createClient safely
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
 
 
