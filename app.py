@@ -25,6 +25,7 @@ def book():
         }
 
         payload = {
+        "full_name": data.get("fullName") or data.get("name") or data.get("full_name"),
         "email": data.get("email"),
         "phone": data.get("phone"),
         "booking_date": data.get("bookingDate") or data.get("booking_date"),
