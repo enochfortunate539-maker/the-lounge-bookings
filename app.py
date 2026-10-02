@@ -1,21 +1,40 @@
-from flask import Flask, render_template
-
-app = Flask(__name__)
-
-
-
+import os
+import requests
 from flask import Flask, request, jsonify
+
+# (Keep your existing app initialization and other routes...)
 
 @app.route('/api/book', methods=['POST'])
 def book():
     try:
-        # Get the JSON data sent from your JavaScript frontend
+        # Get the JSON data sent from your frontend form
         data = request.get_json()
         
-        # Here you can process the booking data 
-        # (e.g., insert it into Supabase from the backend, or save it as needed)
+        # Grab Supabase credentials from environment variables
+        supabase_url = os.environ.get("SUPABASE_URL")
+        supabase_key = os.environ.get("SUPABASE_ANON_KEY")
         
-        return jsonify({"success": True, "message": "Booking received!"}), 200
+        # Set up headers for Supabase REST API
+        headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        }
+        
+        # Forward the booking data to your Supabase 'bookings' table
+        supabase_response = requests.post(
+            f"{supabase_url}/rest/v1/bookings", 
+            json=data, 
+            headers=headers
+        )
+        
+        # Check if Supabase rejected the insert
+        if supabase_response.status_code >= 400:
+            return jsonify({"success": False, "error": supabase_response.text}), 400
+            
+        return jsonify({"success": True, "message": "Booking successfully saved to database!"}), 200
+        
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
