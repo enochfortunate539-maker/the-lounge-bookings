@@ -1,6 +1,8 @@
 import os
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
+
+app = Flask(__name__)
 
 # (Keep your existing app initialization and other routes...)
 
@@ -11,8 +13,8 @@ def book():
         data = request.get_json()
         
         # Grab Supabase credentials from environment variables
-        supabase_url = os.environ.get("SUPABASE_URL")
-        supabase_key = os.environ.get("SUPABASE_ANON_KEY")
+        supabase_url = os.environ.get("https://eryvwusmaswlqsydifwi.supabase.co")
+        supabase_key = os.environ.get("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODMyMDMsImV4cCI6MjEwMjM1OTIwM30.8mlxIRjQLtyPNJtgPb-cKSo6_j2qZEnp7WL952ZLTHM")
         
         # Set up headers for Supabase REST API
         headers = {
