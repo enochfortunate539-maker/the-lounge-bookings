@@ -13,8 +13,8 @@ def book():
         data = request.get_json()
         
         # Grab Supabase credentials from environment variables
-        supabase_url = os.environ.get("https://eryvwusmaswlqsydifwi.supabase.co")
-        supabase_key = os.environ.get("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODMyMDMsImV4cCI6MjEwMjM1OTIwM30.8mlxIRjQLtyPNJtgPb-cKSo6_j2qZEnp7WL952ZLTHM")
+        supabase_url = "https://eryvwusmaswlqsydifwi.supabase.co"
+        supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODMyMDMsImV4cCI6MjEwMjM1OTIwM30.8mlxIRjQLtyPNJtgPb-cKSo6_j2qZEnp7WL952ZLTHM"
         
         # Set up headers for Supabase REST API
         headers = {
