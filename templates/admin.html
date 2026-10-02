@@ -4,452 +4,303 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Lounge - Admin Dashboard</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-stone-50 text-stone-800 flex h-screen overflow-hidden">
+<body class="bg-stone-100 text-stone-900 font-sans antialiased h-screen overflow-hidden">
 
-    <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white border-r border-stone-200 flex flex-col justify-between hidden md:flex">
-        <div>
-            <!-- Brand / Logo Area -->
-            <div class="p-6 flex items-center space-x-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
-                <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+    <!-- Login Modal (Shown when not authenticated) -->
+    <div id="loginModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-xl max-w-md w-full p-8 space-y-6">
+            <div class="text-center space-y-1">
+                <h2 class="text-2xl font-bold tracking-tight">The Lounge Admin</h2>
+                <p class="text-sm text-stone-500">Sign in to access your management dashboard</p>
             </div>
-
-            <!-- Navigation Links -->
-            <nav class="p-4 space-y-1">
-                <a href="#" onclick="switchView('overview')" id="nav-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    <span>Overview</span>
-                </a>
-                <a href="#" onclick="switchView('reservations')" id="nav-reservations" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Reservations</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Signed In User Footer -->
-        <div class="p-4 border-t border-stone-200">
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider">Signed in as</p>
-            <p class="text-xs font-semibold text-stone-700 truncate mb-3">thelounge2024@hotmail.com</p>
-            <button id="signout-btn" onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
-                <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                <span>Sign out</span>
-            </button>
-        </div>
-    </aside>
-
-<!-- Mobile Sidebar Overlay Menu -->
-<div id="mobile-menu" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm hidden md:hidden flex">
-    <div class="w-64 bg-white h-full flex flex-col justify-between shadow-xl">
-        <div>
-            <div class="p-6 flex items-center justify-between border-b border-stone-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white font-bold">L</div>
-                    <span class="font-bold text-lg tracking-tight">The Lounge Admin</span>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Email Address</label>
+                    <input type="email" id="email" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition">
                 </div>
-                <!-- Close Button -->
-                <button id="signout-btn" onclick="toggleMobileMenu()" class="text-stone-400 hover:text-stone-700">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition">
+                </div>
+                <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl transition text-sm shadow-sm">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container (Hidden until authenticated) -->
+    <div id="dashboardContent" class="hidden flex h-screen bg-stone-100 text-stone-900 overflow-hidden relative">
+        
+        <!-- Mobile Sidebar Backdrop Overlay -->
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-stone-900/50 z-20 hidden lg:hidden transition-opacity"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white border-r border-stone-200 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="p-6 border-b border-stone-200 flex justify-between items-center">
+                <h2 class="font-bold text-lg tracking-tight">The Lounge</h2>
+                <button onclick="toggleSidebar()" class="lg:hidden text-stone-500 hover:text-stone-800 p-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <nav class="p-4 space-y-1">
-                <a href="#" onclick="switchView('overview'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <span>Overview</span>
-                </a>
-                <a href="#" onclick="switchView('reservations'); toggleMobileMenu();" class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition">
-                    <span>Reservations</span>
-                </a>
+            <nav class="p-4 space-y-1 flex-1">
+                <button onclick="switchView('overview'); toggleSidebar();" class="w-full text-left px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-stone-50 text-stone-700 transition">Overview</button>
+                <button onclick="switchView('bookings'); toggleSidebar();" class="w-full text-left px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-stone-50 text-stone-700 transition">Bookings</button>
             </nav>
-        </div>
-        <div class="p-4 border-t border-stone-200">
-            <button id="signout-btn" onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2 px-3 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-50 transition">
-                <span>Sign out</span>
-            </button>
-        </div>
+            <div class="p-4 border-t border-stone-200">
+                <button onclick="handleLogout()" class="w-full px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition text-left">Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+            <header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-stone-600 hover:bg-stone-100 transition focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h1 id="pageTitle" class="text-xl font-bold tracking-tight">Overview</h1>
+                </div>
+            </header>
+
+            <div class="p-6 lg:p-8 space-y-6 flex-1">
+
+                
+                <!-- OVERVIEW VIEW -->
+                <div id="viewOverview" class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs">
+                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Pending</p>
+                            <p id="statPending" class="text-3xl font-bold text-amber-600 mt-2">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs">
+                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Confirmed</p>
+                            <p id="statConfirmed" class="text-3xl font-bold text-emerald-600 mt-2">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs">
+                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Completed</p>
+                            <p id="statCompleted" class="text-3xl font-bold text-blue-600 mt-2">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs">
+                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Rejected</p>
+                            <p id="statRejected" class="text-3xl font-bold text-rose-600 mt-2">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-base font-bold text-stone-900 mb-1">Welcome back</h3>
+                            <p class="text-sm text-stone-600">Review and manage your incoming customer reservations in real-time.</p>
+                        </div>
+                        <button onclick="switchView('bookings')" class="inline-flex items-center px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition shadow-xs">
+                            View All Bookings &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BOOKINGS VIEW -->
+                <div id="viewBookings" class="space-y-6 hidden">
+                    <div class="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+                        <div class="p-6 border-b border-stone-200">
+                            <h3 class="text-lg font-bold tracking-tight">Customer Bookings</h3>
+                            <p class="text-xs text-stone-500 mt-0.5">Manage live bookings and update their status directly.</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-stone-50 border-b border-stone-200 text-stone-500 text-xs uppercase tracking-wider">
+                                        <th class="py-3 px-6 font-semibold">Customer</th>
+                                        <th class="py-3 px-6 font-semibold">Date / Time</th>
+                                        <th class="py-3 px-6 font-semibold">Guests</th>
+                                        <th class="py-3 px-6 font-semibold">Status</th>
+                                        <th class="py-3 px-6 font-semibold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingsTableBody" class="divide-y divide-stone-200 text-sm">
+                                    <tr>
+                                        <td colspan="5" class="py-6 px-6 text-center text-stone-400">Loading bookings...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-    <!-- Click outside to close -->
-    <div class="flex-1" onclick="toggleMobileMenu()"></div>
-</div>
 
+    <!-- Scripts -->
+    <script>
+        const SUPABASE_URL = 'https://eryvwusmaswlqsydifwi.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyeXZ3dXNtYXN3bHFzeWRpZndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODMyMDMsImV4cCI6MjEwMjM1OTIwM30.8mlxIRjQLtyPNJtgPb-cKSo6_j2qZEnp7WL952ZLTHM'; // Make sure your complete key is here
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let cachedBookings = [];
 
-
-
-
-
-<!-- Main Content Area -->
-    <main class="flex-1 flex flex-col overflow-y-auto">
-        <!-- Top Navigation Header -->
-        <header class="bg-white border-b border-stone-200 px-8 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-        <!-- Hamburger Menu Toggle Button -->
-        <button onclick="toggleMobileMenu()" class="md:hidden text-stone-600 hover:text-stone-900 focus:outline-none">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-
-
-            <div>
-                <h1 id="page-title" class="text-xl font-bold text-stone-900">Overview</h1>
-                <p id="page-subtitle" class="text-xs text-stone-500">Welcome back. Here is what's happening at the restaurant today.</p>
-            </div>
-        </header>
-
-        <!-- VIEW 1: OVERVIEW -->
-        <div id="view-overview" class="dashboard-view p-8 space-y-6">
-            <!-- Metric Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Pending Requests</span>
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="pending-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-amber-600 font-medium">Needs review</span>
-                    </div>
-                </div>
-
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Confirmed Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="confirmed-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Upcoming</span>
-                    </div>
-                </div>
-
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Completed Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="completed-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Completed</span>
-                    </div>
-                </div>
-
-                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Cancelled Bookings</span>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="cancelled-count" class="text-3xl font-extrabold text-stone-900">0</span>
-                        <span class="text-xs text-emerald-600 font-medium">Cancelled</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Requires Action Section -->
-            <div class="bg-white rounded-xl border border-stone-200 shadow-sm">
-                <div class="p-6 border-b border-stone-100 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-base font-bold text-stone-900">Requires Action</h2>
-                        <p class="text-xs text-stone-500">Table booking requests awaiting confirmation</p>
-                    </div>
-                    <a href="#" onclick="switchView('reservations')" class="text-xs font-semibold text-stone-900 hover:underline flex items-center space-x-1">
-                        <span>View All</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </a>
-                </div>
-                <div id="requires-action-list" class="divide-y divide-stone-100">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW 2: RESERVATIONS -->
-        <div id="view-reservations" class="dashboard-view p-8 space-y-6 hidden">
-            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
-                <h2 class="text-base font-bold text-stone-900 mb-4">All Customer Reservations</h2>
-                <div id="full-bookings-list" class="divide-y divide-stone-100">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-        </div>
-    </main>
-
-  <script>
-    // 1. Unified Page Load Guard & Initialization
-    window.onload = function() {
-        const token = localStorage.getItem('access_token');
-        const loginModal = document.getElementById('loginModal');
-        const dashboardContent = document.getElementById('dashboardContent');
-
-        if (!token) {
-            // No token? Show the login modal and hide dashboard
-            if (loginModal) loginModal.classList.remove('hidden');
-            if (dashboardContent) dashboardContent.classList.add('hidden');
-            return;
-        }
-        
-        // Token exists? Show dashboard and fetch initial data
-        showDashboard();
-    };
-
-    // 2. Show Dashboard UI
-    function showDashboard() {
-        const loginModal = document.getElementById('loginModal');
-        const dashboardContent = document.getElementById('dashboardContent');
-
-        if (loginModal) loginModal.classList.add('hidden');
-        if (dashboardContent) dashboardContent.classList.remove('hidden');
-        
-        // Load default view or bookings data
-        fetchBookingsData();
-    }
-
-    // 3. Handle Login Form Submission
-    async function handleLogin(event) {
-        event.preventDefault();
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const errorText = document.getElementById('loginError');
-
-        if (!usernameInput || !passwordInput) return;
-
-        const username = usernameInput.value;
-        const password = passwordInput.value;
-
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                localStorage.setItem('access_token', data.access_token);
-                showDashboard();
-            } else {
-                if (errorText) {
-                    errorText.classList.remove('hidden');
-                    errorText.textContent = data.error || 'Invalid login credentials';
-                }
-            }
-        } catch (err) {
-            console.error('Login error:', err);
-            if (errorText) {
-                errorText.textContent = 'Server error. Is Flask running?';
-                errorText.classList.remove('hidden');
-            }
-        }
-    }
-
-    // 4. Unified Logout Handler
-    window.handleLogout = function() {
-    console.log("Logging out...");
-    localStorage.removeItem('access_token');
-    // Force a full page reload back to the root/login state
-    window.location.href = "/"; 
-};
-    
-
-    // Auto-attach logout listener when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-        const signoutBtn = document.getElementById('signout-btn');
-        if (signoutBtn) {
-            signoutBtn.addEventListener('click', window.handleLogout);
-        }
-    });
-
-    // 5. View Switcher (Overview, Reservations, Menu, Settings)
-    function switchView(viewName) {
-        document.querySelectorAll('.dashboard-view').forEach(el => el.classList.add('hidden'));
-        
-        ['overview', 'reservations', 'menu', 'settings'].forEach(name => {
-            const nav = document.getElementById(`nav-${name}`);
-            if (nav) {
-                nav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg text-stone-600 hover:bg-stone-100 font-medium text-sm transition";
-            }
-        });
-
-        const targetView = document.getElementById(`view-${viewName}`);
-        if (targetView) targetView.classList.remove('hidden');
-        
-        const activeNav = document.getElementById(`nav-${viewName}`);
-        if (activeNav) {
-            activeNav.className = "flex items-center space-x-3 px-4 py-2.5 rounded-lg bg-stone-900 text-white font-medium text-sm transition";
-        }
-
-        const titles = {
-            'overview': { title: 'Overview', sub: "Welcome back. Here is what's happening at the restaurant today." },
-            'reservations': { title: 'Reservations', sub: 'View and manage all customer table bookings.' },
-            'menu': { title: 'Menu & Items', sub: 'Update dishes, prices, and availability.' },
-            'settings': { title: 'Settings', sub: 'Manage your portal configuration.' }
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         };
-        
-        if (titles[viewName]) {
-            const pageTitle = document.getElementById('page-title');
-            const pageSubtitle = document.getElementById('page-subtitle');
-            if (pageTitle) pageTitle.innerText = titles[viewName].title;
-            if (pageSubtitle) pageSubtitle.innerText = titles[viewName].sub;
-        }
 
-        fetchBookingsData();
-    }
+        window.handleLogout = async function() {
+            await supabaseClient.auth.signOut();
+            localStorage.removeItem('access_token');
+            window.location.reload();
+        };
 
-    // 6. Fetch Bookings Data & Update UI Lists / Counters
-    function fetchBookingsData() {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            window.handleLogout();
-            return;
-        }
+        window.switchView = function(view) {
+            const overviewEl = document.getElementById('viewOverview');
+            const bookingsEl = document.getElementById('viewBookings');
+            const titleEl = document.getElementById('pageTitle');
 
-        fetch('/api/bookings', {
-            headers: {
-                'Authorization': `Bearer ${token}`
+            if (view === 'overview') {
+                overviewEl.classList.remove('hidden');
+                bookingsEl.classList.add('hidden');
+                titleEl.textContent = 'Overview';
+                updateOverviewStats();
+            } else if (view === 'bookings') {
+                overviewEl.classList.add('hidden');
+                bookingsEl.classList.remove('hidden');
+                titleEl.textContent = 'Bookings';
+                fetchBookings();
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const container = document.getElementById('full-bookings-list');
-            const actionContainer = document.getElementById('requires-action-list');
-            const tableBody = document.getElementById('bookingsTableBody');
-            
-            if (!container) return;
-            
-            container.innerHTML = '';
-            if (actionContainer) actionContainer.innerHTML = '';
-            if (tableBody) tableBody.innerHTML = '';
-            
-            if (!data || data.length === 0) {
-                container.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No reservations found.</p>';
-                if (actionContainer) actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending requests.</p>';
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-gray-500">No bookings found yet.</td></tr>`;
-                updateCounters(0, 0, 0, 0);
+        };
+
+        window.handleLogin = async function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert('Login failed: ' + error.message);
                 return;
             }
 
-            let pendingCount = 0;
-            let confirmedCount = 0;
-            let completedCount = 0;
-            let cancelledCount = 0;
+            if (data.session) {
+                localStorage.setItem('access_token', data.session.access_token);
+                checkAuth();
+            }
+        };
 
-            data.forEach(booking => {
-                const status = (booking.status || 'pending').toLowerCase();
-                
-                if (status === 'pending') pendingCount++;
-                else if (status === 'confirmed') confirmedCount++;
-                else if (status === 'completed') completedCount++;
-                else if (status === 'cancelled' || status === 'rejected') cancelledCount++;
+        async function fetchBookings() {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = `<tr><td colspan="5" class="py-6 px-6 text-center text-stone-400">Loading bookings...</td></tr>`;
 
-                const statusBadgeClass = (status === 'confirmed' || status === 'completed') 
-                    ? 'bg-emerald-50 text-emerald-700' 
-                    : 'bg-amber-50 text-amber-700';
+            const { data, error } = await supabaseClient
+                .from('bookings')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-                const itemHTML = `
-                    <div class="py-4 px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-100 gap-4">
-                        <div>
-                            <p class="text-sm font-bold text-stone-900">${booking.full_name || 'Guest'}</p>
-                            <p class="text-xs text-stone-500">${booking.email || ''} | ${booking.phone || ''}</p>
-                            <p class="text-xs text-stone-400 mt-1">Date: ${booking.booking_date} at ${booking.booking_time} (${booking.guests} Guests)</p>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2.5 py-1 ${statusBadgeClass} font-semibold text-xs rounded-full">${booking.status || 'pending'}</span>
-                            <button onclick="updateStatus('${booking.id}', 'confirmed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Confirm</button>
-                            <button onclick="updateStatus('${booking.id}', 'rejected')" class="px-3 py-1.5 border border-stone-300 text-stone-700 font-semibold text-xs rounded-lg hover:bg-stone-50 transition">Reject</button>
-                            <button onclick="updateStatus('${booking.id}', 'completed')" class="px-3 py-1.5 bg-stone-900 text-white font-semibold text-xs rounded-lg hover:bg-stone-800 transition">Completed</button>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += itemHTML;
-
-                if (status === 'pending' && actionContainer) {
-                    actionContainer.innerHTML += itemHTML;
-                }
-
-                // If a table layout exists (like bookingsTableBody)
-                if (tableBody) {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 transition border-b border-stone-100';
-                    row.innerHTML = `
-                        <td class="py-4 px-6 font-medium text-gray-900">${booking.full_name || 'N/A'}</td>
-                        <td class="py-4 px-6">${booking.email || 'N/A'}</td>
-                        <td class="py-4 px-6">${booking.phone || 'N/A'}</td>
-                        <td class="py-4 px-6">${booking.booking_date || 'N/A'}</td>
-                        <td class="py-4 px-6">${booking.booking_time || 'N/A'}</td>
-                        <td class="py-4 px-6">${booking.guests || 'N/A'}</td>
-                        <td class="py-4 px-6 italic text-gray-500">${booking.special_requests || 'None'}</td>
-                    `;
-                    tableBody.appendChild(row);
-                }
-            });
-
-            if (actionContainer && actionContainer.innerHTML === '') {
-                actionContainer.innerHTML = '<p class="text-xs text-stone-500 py-4 px-6">No pending requests awaiting confirmation.</p>';
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 px-6 text-center text-red-500">Error loading bookings: ${error.message}</td></tr>`;
+                return;
             }
 
-            updateCounters(pendingCount, confirmedCount, completedCount, cancelledCount);
-        })
-        .catch(err => console.error("Error fetching bookings:", err));
-    }
-
-    // 7. Counter Updater helper
-    function updateCounters(pending, confirmed, completed, cancelled) {
-        const p = document.getElementById('pending-count');
-        const c = document.getElementById('confirmed-count');
-        const comp = document.getElementById('completed-count');
-        const canc = document.getElementById('cancelled-count');
-
-        if (p) p.textContent = pending;
-        if (c) c.textContent = confirmed;
-        if (comp) comp.textContent = completed;
-        if (canc) canc.textContent = cancelled;
-    }
-
-    // 8. Update Booking Status API Call
-    function updateStatus(bookingId, newStatus) {
-        const token = localStorage.getItem('access_token');
-
-        fetch(`/api/bookings/${bookingId}/status`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ status: newStatus })
-        })
-        .then(res => res.json())
-        .then(data => {
-            fetchBookingsData();
-        })
-        .catch(err => console.error("Error updating status:", err));
-    }
-
-    // 9. Mobile Menu Toggle Helper
-    function toggleMobileMenu() {
-        const mobileMenu = document.getElementById('mobile-menu');
-        if (mobileMenu) {
-            mobileMenu.classList.toggle('hidden');
+            cachedBookings = data || [];
+            renderBookingsTable(cachedBookings);
+            updateOverviewStats();
         }
-    }
-</script>
 
+        function renderBookingsTable(bookings) {
+            const tbody = document.getElementById('bookingsTableBody');
 
-    
+            if (bookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 px-6 text-center text-stone-400">No bookings found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(b => {
+                const status = (b.status || 'pending').toLowerCase();
+                
+                let badgeClass = 'bg-stone-100 text-stone-800';
+                if (status === 'confirmed') badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+                else if (status === 'completed') badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                else if (status === 'rejected') badgeClass = 'bg-rose-50 text-rose-700 border border-rose-200';
+                else if (status === 'pending') badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+
+                const dateStr = b.booking_date || '';
+                const timeStr = b.booking_time ? `at ${b.booking_time}` : '';
+                const dateTimeVal = dateStr ? `${dateStr} ${timeStr}` : 'N/A';
+
+                return `
+                    <tr class="hover:bg-stone-50 transition">
+                        <td class="py-4 px-6 font-medium text-stone-900">
+                            <div>${b.full_name || 'Guest'}</div>
+                            <div class="text-xs text-stone-500">${b.email || ''}</div>
+                        </td>
+                        <td class="py-4 px-6 text-stone-600 text-xs">${dateTimeVal}</td>
+                        <td class="py-4 px-6 text-stone-600">${b.guests || '1'}</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${badgeClass}">
+                                ${status}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right space-x-1">
+                            <button onclick="updateBookingStatus('${b.id}', 'confirmed')" class="px-2.5 py-1 text-xs font-medium bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100 transition">Confirm</button>
+                            <button onclick="updateBookingStatus('${b.id}', 'completed')" class="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition">Complete</button>
+                            <button onclick="updateBookingStatus('${b.id}', 'rejected')" class="px-2.5 py-1 text-xs font-medium bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition">Reject</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.updateBookingStatus = async function(id, newStatus) {
+            const numericId = Number(id);
+            const { data, error } = await supabaseClient
+                .from('bookings')
+                .update({ status: newStatus })
+                .eq('id', numericId)
+                .select();
+
+            if (error) {
+                alert('Failed to update status: ' + error.message);
+                return;
+            }
+
+            cachedBookings = cachedBookings.map(b => b.id == id ? {...b, status: newStatus} : b);
+            renderBookingsTable(cachedBookings);
+            updateOverviewStats();
+        };
+
+        function updateOverviewStats() {
+            let pending = 0, confirmed = 0, completed = 0, rejected = 0;
+
+            cachedBookings.forEach(b => {
+                const s = (b.status || 'pending').toLowerCase();
+                if (s === 'confirmed') confirmed++;
+                else if (s === 'completed') completed++;
+                else if (s === 'rejected') rejected++;
+                else pending++;
+            });
+
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statConfirmed').textContent = confirmed;
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statRejected').textContent = rejected;
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            const loginModal = document.getElementById('loginModal');
+            const dashboardContent = document.getElementById('dashboardContent');
+
+            if (!token) {
+                loginModal.classList.remove('hidden');
+                dashboardContent.classList.add('hidden');
+            } else {
+                loginModal.classList.add('hidden');
+                dashboardContent.classList.remove('hidden');
+                fetchBookings();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
 </body>
 </html>
