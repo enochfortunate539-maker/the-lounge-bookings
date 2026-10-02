@@ -23,13 +23,21 @@ def book():
             "Content-Type": "application/json",
             "Prefer": "return=minimal"
         }
-        
+
+        payload = {
+        "email": data.get("email"),
+        "phone": data.get("phone"),
+        "booking_date": data.get("bookingDate") or data.get("booking_date"),
+        "booking_time": data.get("bookingTime") or data.get("booking_time")
+    }
+
         # Forward the booking data to your Supabase 'bookings' table
         supabase_response = requests.post(
-            f"{supabase_url}/rest/v1/bookings", 
-            json=data, 
-            headers=headers
-        )
+        f"{supabase_url}/rest/v1/bookings",
+        json=payload,
+        headers=headers
+    )
+        
         
         # Check if Supabase rejected the insert
         if supabase_response.status_code >= 400:
