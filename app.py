@@ -28,8 +28,10 @@ def book():
         "full_name": data.get("fullName") or data.get("name") or data.get("full_name"),
         "email": data.get("email"),
         "phone": data.get("phone"),
+        "guests": data.get("guests") or data.get("guest_count") or data.get("partySize") or 1,
         "booking_date": data.get("bookingDate") or data.get("booking_date"),
-        "booking_time": data.get("bookingTime") or data.get("booking_time")
+        "booking_time": data.get("bookingTime") or data.get("booking_time"),
+        "special_requests": data.get("specialRequests") or data.get("special_requests") or ""
     }
 
         # Forward the booking data to your Supabase 'bookings' table
