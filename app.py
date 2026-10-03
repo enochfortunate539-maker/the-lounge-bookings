@@ -1,8 +1,9 @@
 import os
 import requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
+app.secret_key = "your-secure-random-secret-key"
 
 # (Keep your existing app initialization and other routes...)
 
@@ -85,7 +86,11 @@ def privacy():
 
 @app.route('/admin')
 def admin_panel():
-  return render_template('admin.html')
+    if not session.get('staff_logged_in'):
+        return redirect(url_for('home'))  # Redirects unauthorized users away
+    return render_template('admin.html')
+
+  
 
 
 if __name__ == '__main__':
