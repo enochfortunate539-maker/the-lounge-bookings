@@ -84,10 +84,25 @@ def privacy():
   return render_template('privacy.html')
 
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET', 'POST'])
 def admin_panel():
-    if not session.get('staff_logged_in'):
-        return redirect(url_for('home'))  # Redirects unauthorized users away
+    # 1. If already logged in, show the admin dashboard
+    if session.get('staff_logged_in'):
+        return render_template('admin.html')
+    
+    # 2. If the login form was submitted
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Change these to whatever email and password you want your staff to use
+        if email == "staff@thelounge.com" and password == "your_secure_password":
+            session['staff_logged_in'] = True
+            return redirect(url_for('admin_panel'))
+        else:
+            return "Invalid email or password, please go back and try again.", 401
+
+    # 3. If not logged in, show the login screen/page
     return render_template('admin.html')
 
   
