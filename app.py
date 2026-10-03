@@ -3,7 +3,7 @@ import requests
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = "your-secure-random-secret-key"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "change_this_to_a_very_random_unique_string_78234"
 
 # (Keep your existing app initialization and other routes...)
 
