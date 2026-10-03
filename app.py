@@ -105,6 +105,13 @@ def admin_panel():
     # 3. If not logged in, show the login screen/page
     return render_template('admin.html')
 
+
+
+@app.route('/logout')
+def logout():
+    # Clear the staff login session
+    session.pop('staff_logged_in', None)
+    return redirect(url_for('admin_panel')) # Sends them back to the admin page, which will now show the login screen again
   
 
 
